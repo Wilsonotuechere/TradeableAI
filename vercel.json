@@ -2,17 +2,18 @@
   "version": 2,
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "installCommand": "npm install",
-  "framework": "vite",
-  "rewrites": [
+  "routes": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
     }
   ],
   "env": {
     "VITE_SUPABASE_URL": "https://cmmnamhrznvelfkotnoh.supabase.co",
-    "VITE_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtbW5hbWhyem52ZWxma290bm9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU4MjAyMTIsImV4cCI6MjA3MTM5NjIxMn0.r1U3VebYLiyONdr3SgzY-sfqV3GA2NraQrmfevE0bro",
-    "NODE_ENV": "production"
+    "VITE_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtbW5hbWhyem52ZWxma290bm9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU4MjAyMTIsImV4cCI6MjA3MTM5NjIxMn0.r1U3VebYLiyONdr3SgzY-sfqV3GA2NraQrmfevE0bro"
   }
 }
