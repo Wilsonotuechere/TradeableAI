@@ -1,5 +1,5 @@
 import fetch from "node-fetch";
-import { config } from "./env";
+import config from "./env";
 
 async function validateHuggingFaceAPI() {
   const hfKey = config.HUGGINGFACE_API_KEY;
