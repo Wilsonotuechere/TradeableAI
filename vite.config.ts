@@ -25,10 +25,15 @@ export default defineConfig({
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
     rollupOptions: {
-      external: ["@supabase/supabase-js"],
       output: {
         manualChunks: {
-          supabase: ["@supabase/supabase-js"],
+          vendor: [
+            "react",
+            "react-dom",
+            "@supabase/supabase-js",
+            "recharts",
+            "framer-motion",
+          ],
         },
       },
     },
@@ -38,7 +43,13 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    include: ["@supabase/supabase-js"],
+    include: [
+      "@supabase/supabase-js",
+      "react",
+      "react-dom",
+      "recharts",
+      "framer-motion",
+    ],
   },
   server: {
     fs: {
