@@ -28,6 +28,7 @@ export default defineConfig({
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
     rollupOptions: {
+      external: ["@supabase/supabase-js"],
       output: {
         manualChunks: {
           supabase: ["@supabase/supabase-js"],
