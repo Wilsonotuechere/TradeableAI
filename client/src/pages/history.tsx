@@ -11,11 +11,11 @@ import {
 } from "lucide-react";
 import GlassCard from "@/components/ui/glass-card";
 import ProtectedRoute from "@/components/auth/protected-route";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Clock, MessageSquare } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { supabase, chat, ChatMessage, Conversation } from "@/lib/supabase";
 
 const categoryIcons = {
   "Market Analysis": BarChart3,
@@ -31,20 +31,7 @@ const categoryColors = {
   "Trading Questions": "bg-electric/20 text-electric",
 };
 
-interface ChatMessage {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  timestamp: string;
-  metadata?: Record<string, any>;
-}
-
-interface ChatHistory {
-  id: string;
-  title: string;
-  createdAt: Date;
-  userId: string | null;
-  category: string;
+interface ChatHistoryWithMessages extends Conversation {
   messages: ChatMessage[];
 }
 
@@ -55,20 +42,43 @@ export default function History() {
   const queryClient = useQueryClient();
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["/api/chat/history"],
+    queryKey: ["chat-history"],
     queryFn: async () => {
-      const response = await apiRequest("GET", "/api/chat/history");
-      return response.json();
+      const [conversations, messagesResponse] = await Promise.all([
+        chat.getConversations(),
+        supabase.from("messages").select("*"),
+      ]);
+
+      if (messagesResponse.error) throw messagesResponse.error;
+
+      const messages = messagesResponse.data;
+      const conversationsWithMessages = conversations.map((conv) => ({
+        ...conv,
+        messages: messages.filter((msg) => msg.conversation_id === conv.id),
+      }));
+
+      return { data: conversationsWithMessages };
     },
   });
 
   const clearHistoryMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest("DELETE", "/api/chat/history");
-      return response.json();
+      const { error: messagesError } = await supabase
+        .from("messages")
+        .delete()
+        .neq("id", "");
+
+      if (messagesError) throw messagesError;
+
+      const { error: conversationsError } = await supabase
+        .from("conversations")
+        .delete()
+        .neq("id", "");
+
+      if (conversationsError) throw conversationsError;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/chat/history"] });
+      queryClient.invalidateQueries({ queryKey: ["chat-history"] });
       toast({
         title: "Success",
         description: "Chat history cleared successfully",
@@ -83,14 +93,16 @@ export default function History() {
     },
   });
 
-  const filteredHistory = (data?.data || []).filter((chat: any) => {
-    const matchesSearch = chat.title
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const matchesCategory =
-      selectedCategory === "All Topics" || chat.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const filteredHistory = (data?.data || []).filter(
+    (chat: ChatHistoryWithMessages) => {
+      const matchesSearch = chat.title
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+      const matchesCategory =
+        selectedCategory === "All Topics" || chat.category === selectedCategory;
+      return matchesSearch && matchesCategory;
+    }
+  );
 
   if (isLoading) {
     return (
@@ -195,7 +207,7 @@ export default function History() {
                 const messageCount = Array.isArray(chat.messages)
                   ? chat.messages.length
                   : 0;
-                const timeAgo = new Date(chat.createdAt).toLocaleDateString(
+                const timeAgo = new Date(chat.created_at).toLocaleDateString(
                   "en-US",
                   {
                     month: "short",
@@ -229,7 +241,7 @@ export default function History() {
                     </p>
                     <div className="flex items-center text-cool-gray/70 text-sm">
                       <Clock className="h-4 w-4 mr-2" />
-                      {formatDistanceToNow(new Date(chat.createdAt), {
+                      {formatDistanceToNow(new Date(chat.created_at), {
                         addSuffix: true,
                       })}
                     </div>
