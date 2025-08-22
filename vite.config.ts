@@ -7,15 +7,11 @@ export default defineConfig({
   plugins: [
     react(),
     runtimeErrorOverlay(),
-    ...(process.env.NODE_ENV !== "production" &&
-    process.env.REPL_ID !== undefined
-      ? [
-          await import("@replit/vite-plugin-cartographer").then((m) =>
-            m.cartographer()
-          ),
-        ]
-      : []),
   ],
+  define: {
+    'process.env.VITE_SUPABASE_URL': JSON.stringify(process.env.VITE_SUPABASE_URL),
+    'process.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(process.env.VITE_SUPABASE_ANON_KEY)
+  },
   resolve: {
     alias: {
       "@": path.resolve(import.meta.dirname, "client", "src"),

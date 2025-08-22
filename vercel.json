@@ -1,27 +1,18 @@
 {
   "version": 2,
-  "builds": [
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "installCommand": "npm install",
+  "framework": "vite",
+  "rewrites": [
     {
-      "src": "client/dist/**",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "dist/index.js",
-      "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "dist/index.js"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "client/dist/$1"
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
     }
   ],
   "env": {
-    "VITE_SUPABASE_URL": "@vite_supabase_url",
-    "VITE_SUPABASE_ANON_KEY": "@vite_supabase_anon_key"
+    "VITE_SUPABASE_URL": "https://cmmnamhrznvelfkotnoh.supabase.co",
+    "VITE_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNtbW5hbWhyem52ZWxma290bm9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU4MjAyMTIsImV4cCI6MjA3MTM5NjIxMn0.r1U3VebYLiyONdr3SgzY-sfqV3GA2NraQrmfevE0bro",
+    "NODE_ENV": "production"
   }
 }
