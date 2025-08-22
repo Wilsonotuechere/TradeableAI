@@ -1,0 +1,162 @@
+Build me a full-stack monorepo project named Tradeable, a beginner-friendly crypto trading assistant.
+The project must include both:
+
+Frontend: Next.js + Tailwind CSS + Chart.js/Recharts
+
+Backend: Node.js + Express
+All code must be generated in a single build, with /frontend and /backend folders inside the root.
+Wire them together so the frontend calls backend API routes for data.
+
+Project Purpose
+Tradeable helps users understand cryptocurrency markets without taking over their trades.
+It:
+
+Answers crypto questions in simple, beginner-friendly language.
+
+Fetches and analyzes:
+
+Real-time crypto market data (Binance API)
+
+News articles (News API)
+
+Tweets (Twitter API)
+
+Suggests potentially profitable coins (non-financial advice).
+
+Displays visual charts and sentiment indicators.
+
+No authentication or login in this MVP.
+
+Monorepo Structure
+bash
+Copy
+Edit
+/tradeable
+  /frontend   → Next.js app
+  /backend    → Node.js + Express API
+  package.json (workspace config)
+  README.md
+Frontend Requirements
+Pages:
+
+/ → Home with intro & "Start Chat" button.
+
+/chat → AI chat interface + sidebar nav.
+
+/market → Market Overview (charts, gainers/losers, AI summary).
+
+/news → News Sentiment (articles + tweets + sentiment analysis).
+
+/history → Local chat history page (localStorage).
+
+UI Styling:
+
+Tailwind theme colors:
+
+Primary: #1E293B
+
+Accent: #38BDF8
+
+Success: #22C55E
+
+Warning: #FACC15
+
+Danger: #EF4444
+
+Background: #F8FAFC
+
+Sidebar navigation with icons.
+
+Chat bubbles (blue for user, gray for AI).
+
+Card layouts for charts/news.
+
+Sentiment indicators (green/neutral/red).
+
+Backend Requirements
+Routes:
+
+GET /api/market → Fetch Binance market data.
+
+GET /api/news → Fetch News API articles.
+
+GET /api/twitter → Fetch tweets from Twitter API.
+
+POST /api/chat → Pass query + market/news/tweet data to AI models and return simplified breakdown.
+
+Features:
+
+.env for:
+
+BINANCE_API_KEY
+
+NEWS_API_KEY
+
+TWITTER_BEARER_TOKEN
+
+HUGGINGFACE_API_KEY
+
+GEMINI_API_KEY
+
+CORS enabled.
+
+Error handling with clear messages.
+
+Use mock data if API keys are missing.
+
+AI Integration
+Hugging Face Inference API:
+
+Sentiment analysis (distilbert-base-uncased-finetuned-sst-2-english)
+
+Google Gemini API:
+
+AI explanations of market/news/tweet data in simple terms.
+
+Always break down complex terms for beginners.
+
+End every AI response with:
+
+“This is information, not financial advice.”
+
+Data Flow Example
+User asks: “What’s up with Bitcoin today?”
+
+Backend fetches BTC data, latest news, tweets, runs sentiment analysis.
+
+Sends all data to Gemini with prompt for beginner-friendly summary.
+
+Frontend displays AI response in chat bubble + supporting charts/news.
+
+Local History
+Store user queries + AI responses in localStorage.
+
+Include “Clear History” button.
+
+Tech Stack
+Frontend: Next.js, Tailwind CSS, Chart.js/Recharts
+
+Backend: Node.js + Express
+
+AI: Hugging Face Inference API, Google Gemini API
+
+Deployment: Vercel (frontend), Render/Railway (backend)
+
+Deliverables
+Full code for frontend + backend, wired together.
+
+Example .env.example file.
+
+API calls implemented.
+
+Mock data fallback if no keys present.
+
+Working dev commands:
+
+bash
+Copy
+Edit
+npm install
+npm run dev
+Backend on port 5000, frontend on port 3000, proxy /api to backend.
+

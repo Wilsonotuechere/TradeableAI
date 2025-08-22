@@ -1,0 +1,236 @@
+"use client";
+
+import { Layout } from "@/components/Layout";
+import { ChatBox } from "@/components/ChatBox";
+import { MessageBubble } from "@/components/MessageBubble";
+import { LoadingIndicator } from "@/components/LoadingIndicator";
+import { useTradeable } from "@/contexts/TradeableContext";
+import { useWebSocket } from "@/hooks/useWebSocket";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Trash2, MessageSquare, Wifi, WifiOff } from "lucide-react";
+import { useEffect, useState } from "react";
+import { env } from "@/config/env";
+
+export default function ChatPage() {
+  const { state, dispatch } = useTradeable();
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+
+  const { connectionStatus, sendMessage, connect, disconnect, isConnected } =
+    useWebSocket({
+      url: env.WS_URL,
+      onMessage: (data) => {
+        console.log("Received WebSocket message:", data);
+        // Handle incoming messages here
+        if (data.type === "ai_response") {
+          dispatch({
+            type: "ADD_CHAT_MESSAGE",
+            payload: {
+              id: Date.now().toString(),
+              content: data.message,
+              type: "ai" as const,
+              timestamp: new Date().toISOString(),
+            },
+          });
+        }
+      },
+      onError: (error) => {
+        console.error("WebSocket error:", error);
+        setConnectionError(
+          "Failed to connect to chat service. Using fallback mode."
+        );
+      },
+      onConnect: () => {
+        console.log("WebSocket connected");
+        setConnectionError(null);
+      },
+      onDisconnect: () => {
+        console.log("WebSocket disconnected");
+        setConnectionError(
+          "Disconnected from chat service. Attempting to reconnect..."
+        );
+      },
+      autoReconnect: true,
+      reconnectInterval: 3000,
+    });
+
+  useEffect(() => {
+    // Try to connect when component mounts
+    connect();
+  }, [connect]);
+
+  const clearHistory = () => {
+    if (confirm("Are you sure you want to clear all chat history?")) {
+      dispatch({ type: "CLEAR_CHAT_HISTORY" });
+    }
+  };
+
+  const handleSendMessage = async (message: string) => {
+    // Add user message immediately
+    const userMessage = {
+      id: Date.now().toString(),
+      type: "user" as const,
+      content: message,
+      timestamp: new Date().toISOString(),
+    };
+    dispatch({ type: "ADD_CHAT_MESSAGE", payload: userMessage });
+
+    if (isConnected) {
+      // Send via WebSocket
+      sendMessage({
+        type: "user_message",
+        message: message,
+        timestamp: new Date().toISOString(),
+      });
+    } else {
+      // Fallback to direct API call
+      try {
+        dispatch({ type: "SET_LOADING", payload: true });
+
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`API request failed: ${response.status}`);
+        }
+
+        const aiResponse = await response.json();
+
+        dispatch({
+          type: "ADD_CHAT_MESSAGE",
+          payload: {
+            id: (Date.now() + 1).toString(),
+            content:
+              aiResponse.message || "Sorry, I could not process your request.",
+            type: "ai" as const,
+            timestamp: new Date().toISOString(),
+          },
+        });
+      } catch (error) {
+        console.error("Fallback API error:", error);
+        dispatch({
+          type: "ADD_CHAT_MESSAGE",
+          payload: {
+            id: (Date.now() + 1).toString(),
+            content:
+              "Sorry, I am currently unable to respond. Please try again later.",
+            type: "ai" as const,
+            timestamp: new Date().toISOString(),
+          },
+        });
+      } finally {
+        dispatch({ type: "SET_LOADING", payload: false });
+      }
+    }
+  };
+
+  return (
+    <Layout>
+      <div className="flex flex-col h-screen">
+        {/* Chat Header */}
+        <div className="border-b border-border bg-card p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <MessageSquare className="h-6 w-6 text-primary" />
+              <div>
+                <h1 className="text-xl font-serif font-bold">
+                  Trading Assistant
+                </h1>
+                <p className="text-sm text-muted-foreground">
+                  Ask me anything about crypto markets, trading, or get
+                  real-time analysis
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {/* Connection Status */}
+              <div className="flex items-center gap-2">
+                {isConnected ? (
+                  <Wifi className="h-4 w-4 text-green-500" />
+                ) : (
+                  <WifiOff className="h-4 w-4 text-red-500" />
+                )}
+                <span className="text-xs text-muted-foreground">
+                  {connectionStatus}
+                </span>
+              </div>
+
+              {state.chatHistory.length > 0 && (
+                <Button variant="outline" size="sm" onClick={clearHistory}>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Clear History
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* Connection Error Alert */}
+          {connectionError && (
+            <Alert className="mt-2">
+              <AlertDescription>{connectionError}</AlertDescription>
+            </Alert>
+          )}
+        </div>
+
+        {/* Chat Messages */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {state.chatHistory.length === 0 ? (
+            <div className="flex items-center justify-center h-full">
+              <Card className="max-w-md">
+                <CardHeader>
+                  <CardTitle className="text-center">
+                    Welcome to Tradeable!
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-center text-muted-foreground">
+                    I'm your AI trading assistant. Ask me about:
+                  </p>
+                  <div className="space-y-2 text-sm">
+                    <div className="p-2 bg-muted rounded">
+                      "What's the current Bitcoin price?"
+                    </div>
+                    <div className="p-2 bg-muted rounded">
+                      "Should I buy Ethereum now?"
+                    </div>
+                    <div className="p-2 bg-muted rounded">
+                      "Show me the latest crypto news"
+                    </div>
+                    <div className="p-2 bg-muted rounded">
+                      "Explain what RSI means"
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          ) : (
+            <>
+              {state.chatHistory.map((message) => (
+                <MessageBubble key={message.id} message={message} />
+              ))}
+              {state.isLoading && (
+                <div className="flex justify-start">
+                  <div className="bg-card border border-border rounded-lg p-4 max-w-xs">
+                    <LoadingIndicator
+                      message="AI is thinking..."
+                      type="thinking"
+                    />
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Chat Input */}
+        <div className="border-t border-border bg-card p-4">
+          <ChatBox onSendMessage={handleSendMessage} />
+        </div>
+      </div>
+    </Layout>
+  );
+}

@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tradeable - AI Crypto Trading Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/heroicons@2.0.18/24/outline/index.js" type="module"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    'navy': '#0A0F2C',
+                    'electric': '#1F8EF1',
+                    'neon': '#9B5DE5',
+                    'success': '#2ECC71',
+                    'warning': '#F1C40F',
+                    'text-primary': '#F8F9FA',
+                    'text-muted': '#9AA0A6',
+                },
+                fontFamily: {
+                    'space': ['Space Grotesk', 'sans-serif'],
+                    'inter': ['Inter', 'sans-serif'],
+                    'mono': ['JetBrains Mono', 'monospace'],
+                }
+            }
+        }
+    };
+    </script>
+    <style>
+        .glassmorphism {
+            background: rgba(31, 142, 241, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(31, 142, 241, 0.2);
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #1F8EF1 0%, #9B5DE5 100%);
+        }
+        
+        .animated-gradient {
+            background: linear-gradient(-45deg, #0A0F2C, #1F8EF1, #9B5DE5, #0A0F2C);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+        
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .ai-pulse {
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 20px rgba(31, 142, 241, 0.5);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+        }
+        
+        .number-roll {
+            animation: rollUp 0.5s ease-out;
+        }
+        
+        @keyframes rollUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .market-mood {
+            animation: moodPulse 3s ease-in-out infinite;
+        }
+        
+        @keyframes moodPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .slide-up {
+            transform: translateY(100%);
+            transition: transform 0.3s ease-out;
+        }
+        
+        .slide-up.active {
+            transform: translateY(0);
+        }
+        
+        .btn-glow:hover {
+            box-shadow: 0 5px 20px rgba(31, 142, 241, 0.4);
+            transform: translateY(-2px);
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-navy text-text-primary font-inter">
+    <!-- Animated Background -->
+    <div class="fixed inset-0 animated-gradient opacity-20 -z-10"></div>
+    
+    <!-- Main Container -->
+    <div class="flex h-screen">
+        <!-- @COMPONENT: Sidebar Navigation -->
+        <aside class="w-64 glassmorphism p-6 flex flex-col">
+            <div class="flex items-center space-x-3 mb-8">
+                <div class="w-8 h-8 gradient-bg rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
+                    </svg>
+                </div>
+                <span class="font-space font-bold text-xl">Tradeable</span>
+            </div>
+            
+            <nav class="flex-1 space-y-2">
+                <a href="#" class="flex items-center space-x-3 p-3 rounded-lg bg-electric/20 text-electric">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                    </svg>
+                    <span class="font-medium">AI Chat</span>
+                </a>
+                
+                <a href="#" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-electric/10 text-text-muted hover:text-text-primary transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    <span class="font-medium">Market Overview</span>
+                </a>
+                
+                <a href="#" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-electric/10 text-text-muted hover:text-text-primary transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
+                    </svg>
+                    <span class="font-medium">News & Sentiment</span>
+                </a>
+                
+                <a href="#" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-electric/10 text-text-muted hover:text-text-primary transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span class="font-medium">History</span>
+                </a>
+            </nav>
+            
+            <!-- Market Mood Indicator -->
+            <div class="mt-auto p-4 glassmorphism rounded-lg">
+                <div class="flex items-center space-x-2">
+                    <div class="w-3 h-3 bg-success rounded-full market-mood"></div>
+                    <span class="text-sm font-medium">Market Mood</span>
+                </div>
+                <p class="text-xs text-text-muted mt-1">Bullish sentiment detected</p>
+            </div>
+        </aside>
+        <!-- @END_COMPONENT: Sidebar Navigation -->
+
+        <!-- Main Content Area -->
+        <main class="flex-1 flex flex-col">
+            <!-- @COMPONENT: Header -->
+            <header class="p-6 border-b border-electric/20">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="font-space font-bold text-2xl">AI Trading Assistant</h1>
+                        <p class="text-text-muted">Get beginner-friendly crypto insights and analysis</p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="glassmorphism px-4 py-2 rounded-lg">
+                            <span class="text-sm text-text-muted">BTC Price</span>
+                            <div class="font-mono font-bold text-success number-roll">$45,234.67</div>
+                        </div>
+                        <button class="p-2 glassmorphism rounded-lg hover:bg-electric/20 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </header>
+            <!-- @END_COMPONENT: Header -->
+
+            <div class="flex-1 flex">
+                <!-- Chat Section -->
+                <div class="flex-1 flex flex-col p-6">
+                    <!-- @COMPONENT: Chat Messages -->
+                    <div class="flex-1 space-y-4 overflow-y-auto mb-6">
+                        <!-- Welcome Message -->
+                        <div class="flex items-start space-x-3">
+                            <div class="w-8 h-8 bg-electric rounded-full flex items-center justify-center ai-pulse">
+                                <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <div class="glassmorphism p-4 rounded-2xl rounded-tl-none max-w-md">
+                                <p class="text-sm">👋 Welcome to Tradeable! I'm your AI crypto assistant. Ask me anything about cryptocurrency markets, and I'll break it down in simple terms.</p>
+                                <p class="text-xs text-text-muted mt-2 italic">This is information, not financial advice.</p>
+                            </div>
+                        </div>
+                        
+                        <!-- User Message -->
+                        <div class="flex items-start space-x-3 justify-end">
+                            <div class="bg-electric p-4 rounded-2xl rounded-tr-none max-w-md">
+                                <p class="text-sm text-white">What's happening with Bitcoin today?</p>
+                            </div>
+                            <div class="w-8 h-8 bg-neon rounded-full flex items-center justify-center">
+                                <span class="text-xs font-bold text-white">U</span>
+                            </div>
+                        </div>
+                        
+                        <!-- AI Response with Conversational Reveal -->
+                        <div class="flex items-start space-x-3">
+                            <div class="w-8 h-8 bg-electric rounded-full flex items-center justify-center">
+                                <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <div class="glassmorphism p-4 rounded-2xl rounded-tl-none max-w-2xl">
+                                <div class="space-y-3">
+                                    <div class="animate-pulse">
+                                        <h3 class="font-space font-semibold text-lg mb-2">📈 Bitcoin Analysis for Today</h3>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div class="glassmorphism p-3 rounded-lg">
+                                            <div class="text-xs text-text-muted">Current Price</div>
+                                            <div class="font-mono font-bold text-success number-roll">$45,234.67</div>
+                                            <div class="text-xs text-success">+2.3% (24h)</div>
+                                        </div>
+                                        <div class="glassmorphism p-3 rounded-lg">
+                                            <div class="text-xs text-text-muted">Market Sentiment</div>
+                                            <div class="flex items-center space-x-2">
+                                                <div class="w-2 h-2 bg-success rounded-full market-mood"></div>
+                                                <span class="text-sm font-medium">Bullish</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <p class="text-sm">Bitcoin is showing positive momentum today! Here's what's driving it:</p>
+                                    <ul class="text-sm space-y-1 ml-4">
+                                        <li>• Institutional buying pressure increased by 15%</li>
+                                        <li>• Technical indicators suggest continued upward trend</li>
+                                        <li>• Social sentiment on Twitter is 68% positive</li>
+                                    </ul>
+                                    
+                                    <!-- Mini Chart Placeholder -->
+                                    <!-- Bitcoin price chart showing 24h trend with candlesticks -->
+                                    <div class="glassmorphism p-3 rounded-lg">
+                                        <div class="h-24 bg-gradient-to-r from-electric/20 to-success/20 rounded flex items-end justify-center">
+                                            <div class="text-xs text-text-muted">📊 24h Price Chart</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-text-muted mt-3 italic border-t border-electric/20 pt-2">This is information, not financial advice.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- @END_COMPONENT: Chat Messages -->
+                    
+                    <!-- @COMPONENT: Chat Input -->
+                    <div class="glassmorphism p-4 rounded-2xl">
+                        <div class="flex space-x-3">
+                            <input 
+                                type="text" 
+                                placeholder="Ask about any cryptocurrency..."
+                                class="flex-1 bg-transparent border-none outline-none text-text-primary placeholder-text-muted focus:ring-2 focus:ring-electric/50 rounded-lg p-3"
+                                data-mock="true"
+                            />
+                            <button class="gradient-bg px-6 py-3 rounded-lg font-medium text-white btn-glow transition-all">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="flex space-x-2 mt-3">
+                            <button class="text-xs px-3 py-1 bg-electric/20 text-electric rounded-full hover:bg-electric/30 transition-colors">
+                                Analyze Ethereum
+                            </button>
+                            <button class="text-xs px-3 py-1 bg-electric/20 text-electric rounded-full hover:bg-electric/30 transition-colors">
+                                Market trends
+                            </button>
+                            <button class="text-xs px-3 py-1 bg-electric/20 text-electric rounded-full hover:bg-electric/30 transition-colors">
+                                News summary
+                            </button>
+                        </div>
+                    </div>
+                    <!-- @END_COMPONENT: Chat Input -->
+                </div>
+                
+                <!-- @COMPONENT: Market Overview Sidebar -->
+                <aside class="w-80 p-6 border-l border-electric/20 space-y-6">
+                    <div>
+                        <h2 class="font-space font-semibold text-lg mb-4">Live Market Data</h2>
+                        
+                        <!-- Top Gainers -->
+                        <div class="glassmorphism p-4 rounded-lg mb-4">
+                            <h3 class="text-sm font-medium text-text-muted mb-3">🚀 Top Gainers (24h)</h3>
+                            <div class="space-y-2">
+                                <div class="flex justify-between items-center">
+                                    <div class="flex items-center space-x-2">
+                                        <!-- Cryptocurrency icon showing Bitcoin logo -->
+                                        <div class="w-6 h-6 bg-warning rounded-full flex items-center justify-center">
+                                            <span class="text-xs font-bold">₿</span>
+                                        </div>
+                                        <div>
+                                            <div class="text-sm font-medium">BTC</div>
+                                            <div class="text-xs text-text-muted">Bitcoin</div>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="font-mono text-sm">$45,234</div>
+                                        <div class="text-xs text-success">+5.2%</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex justify-between items-center">
+                                    <div class="flex items-center space-x-2">
+                                        <!-- Ethereum logo placeholder -->
+                                        <div class="w-6 h-6 bg-electric rounded-full flex items-center justify-center">
+                                            <span class="text-xs font-bold text-white">Ξ</span>
+                                        </div>
+                                        <div>
+                                            <div class="text-sm font-medium">ETH</div>
+                                            <div class="text-xs text-text-muted">Ethereum</div>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="font-mono text-sm">$2,847</div>
+                                        <div class="text-xs text-success">+3.1%</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex justify-between items-center">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="w-6 h-6 bg-neon rounded-full flex items-center justify-center">
+                                            <span class="text-xs font-bold text-white">◎</span>
+                                        </div>
+                                        <div>
+                                            <div class="text-sm font-medium">SOL</div>
+                                            <div class="text-xs text-text-muted">Solana</div>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="font-mono text-sm">$98.45</div>
+                                        <div class="text-xs text-success">+7.8%</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Market Summary -->
+                        <div class="glassmorphism p-4 rounded-lg mb-4">
+                            <h3 class="text-sm font-medium text-text-muted mb-3">📊 Market Summary</h3>
+                            <div class="space-y-3">
+                                <div class="flex justify-between">
+                                    <span class="text-sm">Total Market Cap</span>
+                                    <span class="font-mono text-sm">$1.89T</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-sm">24h Volume</span>
+                                    <span class="font-mono text-sm">$67.2B</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-sm">BTC Dominance</span>
+                                    <span class="font-mono text-sm">42.3%</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- News Sentiment -->
+                        <div class="glassmorphism p-4 rounded-lg">
+                            <h3 class="text-sm font-medium text-text-muted mb-3">📰 News Sentiment</h3>
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm">Overall Sentiment</span>
+                                    <div class="flex items-center space-x-2">
+                                        <div class="w-2 h-2 bg-success rounded-full market-mood"></div>
+                                        <span class="text-sm text-success">Positive</span>
+                                    </div>
+                                </div>
+                                <div class="w-full bg-navy rounded-full h-2">
+                                    <div class="bg-gradient-to-r from-success to-electric h-2 rounded-full" style="width: 68%"></div>
+                                </div>
+                                <div class="flex justify-between text-xs text-text-muted">
+                                    <span>Bearish</span>
+                                    <span>68% Bullish</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 space-y-2">
+                                <div class="text-xs">
+                                    <div class="font-medium">Latest: "Bitcoin ETF approvals surge"</div>
+                                    <div class="text-text-muted">2 minutes ago • CoinDesk</div>
+                                </div>
+                                <div class="text-xs">
+                                    <div class="font-medium">"Institutional adoption accelerates"</div>
+                                    <div class="text-text-muted">15 minutes ago • Bloomberg</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+                <!-- @END_COMPONENT: Market Overview Sidebar -->
+            </div>
+        </main>
+    </div>
+
+    <!-- @COMPONENT: Sliding Asset Detail Panel -->
+    <div class="fixed inset-x-0 bottom-0 glassmorphism slide-up" id="assetPanel" style="height: 60vh;">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="font-space font-bold text-xl">Bitcoin (BTC) Analysis</h2>
+                <button onclick="closeAssetPanel()" class="p-2 hover:bg-electric/20 rounded-lg transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <!-- Bitcoin trading chart with candlesticks showing price action -->
+                    <div class="glassmorphism p-4 rounded-lg h-64 flex items-center justify-center">
+                        <div class="text-center text-text-muted">
+                            <svg class="w-12 h-12 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            </svg>
+                            <div class="text-sm">Interactive Chart Component</div>
+                            <div class="text-xs">Real-time BTC/USD data visualization</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="space-y-4">
+                    <div class="glassmorphism p-4 rounded-lg">
+                        <h3 class="font-medium mb-2">Key Metrics</h3>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-text-muted">Market Cap</span>
+                                <span class="font-mono">$887.5B</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-text-muted">24h Volume</span>
+                                <span class="font-mono">$28.9B</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-text-muted">Circulating Supply</span>
+                                <span class="font-mono">19.6M BTC</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="glassmorphism p-4 rounded-lg">
+                        <h3 class="font-medium mb-2">AI Recommendation</h3>
+                        <div class="text-sm space-y-2">
+                            <p>Based on current market conditions, Bitcoin shows strong bullish momentum with healthy trading volume.</p>
+                            <div class="flex items-center space-x-2 p-2 bg-success/20 rounded">
+                                <div class="w-2 h-2 bg-success rounded-full"></div>
+                                <span class="text-success text-xs">Favorable technical indicators</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-text-muted mt-2 italic">This is information, not financial advice.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: Sliding Asset Detail Panel -->
+    
+    <script>
+        (function() {
+            // Mock interactive functionality
+            let messageCount = 0;
+            
+            // Simulate real-time price updates
+            function updatePrices() {
+                const priceElements = document.querySelectorAll('.number-roll');
+                priceElements.forEach(el => {
+                    el.classList.add('number-roll');
+                    setTimeout(() => el.classList.remove('number-roll'), 500);
+                });
+            }
+            
+            // Update prices every 5 seconds
+            setInterval(updatePrices, 5000);
+            
+            // Mock chat functionality
+            const chatInput = document.querySelector('input[type="text"]');
+            const sendButton = document.querySelector('.gradient-bg');
+            
+            if (chatInput && sendButton) {
+                sendButton.addEventListener('click', function() {
+                    // TODO: Implement actual chat submission logic
+                    console.log('Chat message would be sent:', chatInput.value);
+                    chatInput.value = '';
+                });
+                
+                chatInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        sendButton.click();
+                    }
+                });
+            }
+            
+            // Asset panel functionality
+            window.closeAssetPanel = function() {
+                const panel = document.getElementById('assetPanel');
+                panel.classList.remove('active');
+            };
+            
+            // Mock asset click handlers
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.flex.justify-between.items-center')) {
+                    const panel = document.getElementById('assetPanel');
+                    panel.classList.add('active');
+                }
+            });
+            
+            // Initialize market mood animation
+            setTimeout(() => {
+                const moodElements = document.querySelectorAll('.market-mood');
+                moodElements.forEach(el => {
+                    el.classList.add('market-mood');
+                });
+            }, 1000);
+            
+        })();
+    </script>
+</body>
+</html>

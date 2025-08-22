@@ -1,0 +1,316 @@
+8:44:15 PM [express] GET /api/news 200 in 583ms :: {"success":true,"data":{"articles":[{"id":"news_1…
+Fetching top cryptocurrencies from Binance...
+Fetching real market data from Binance...
+Fetching top cryptocurrencies from Binance...
+Binance API error: Error: Binance API error: 451 
+    at BinanceClient.getTopCryptocurrencies (/home/runner/workspace/server/api-clients.ts:33:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:344:28)
+Generating market analysis for BTC...
+Fetching real market data from Binance for BTCUSDT...
+Starting analysis of 3 texts...
+Analyzing sentiment with FinBERT model
+Analyzing sentiment with FinBERT model
+Analyzing sentiment with FinBERT model
+Market data error: MarketAnalysisError: HTTP error! status: 451 - 
+    at fetchWithRetry (/home/runner/workspace/server/services/market-analysis-service.ts:125:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async getBinanceMarketData (/home/runner/workspace/server/services/market-analysis-service.ts:179:18)
+    at async Promise.all (index 0)
+    at async generateMarketAnalysis (/home/runner/workspace/server/services/market-analysis-service.ts:415:40)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:356:26) {
+  code: 'API_ERROR',
+  statusCode: 451,
+  details: undefined
+}
+Error generating market analysis: MarketAnalysisError: HTTP error! status: 451 - 
+    at fetchWithRetry (/home/runner/workspace/server/services/market-analysis-service.ts:125:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async getBinanceMarketData (/home/runner/workspace/server/services/market-analysis-service.ts:179:18)
+    at async Promise.all (index 0)
+    at async generateMarketAnalysis (/home/runner/workspace/server/services/market-analysis-service.ts:415:40)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:356:26) {
+  code: 'API_ERROR',
+  statusCode: 451,
+  details: undefined
+}
+Error: CustomAPIError: Failed to generate market analysis
+    at <anonymous> (/home/runner/workspace/server/routes.ts:363:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  code: 'ANALYSIS_FAILED',
+  statusCode: 503,
+  details: {
+    originalError: 'HTTP error! status: 451 - ',
+    suggestion: 'Try refreshing or selecting a different cryptocurrency'
+  }
+}
+8:44:30 PM [express] GET /api/market/analysis/BTC 503 in 72ms :: {"success":false,"error":{"message"…
+Market stats error: Error: Binance API error: 451
+    at BinanceClient.getMarketStats (/home/runner/workspace/server/api-clients.ts:81:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async Promise.all (index 1)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:188:51)
+Klines error: Error: Binance klines error: 451
+    at BinanceClient.getKlines (/home/runner/workspace/server/api-clients.ts:142:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:268:29)
+Error: CustomAPIError: Failed to fetch chart data
+    at <anonymous> (/home/runner/workspace/server/routes.ts:316:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  code: 'CHART_DATA_UNAVAILABLE',
+  statusCode: 503,
+  details: {
+    originalError: 'Binance klines error: 451',
+    suggestion: 'Try again later or check your connection'
+  }
+}
+8:44:30 PM [express] GET /api/market/data 503 in 78ms :: {"success":false,"error":{"message":"Failed…
+Binance API error: Error: Binance API error: 451 
+    at BinanceClient.getTopCryptocurrencies (/home/runner/workspace/server/api-clients.ts:33:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async Promise.all (index 0)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:188:51)
+Market data fetched in 88ms
+Cached response: GET:/api/market
+8:44:30 PM [express] GET /api/market 200 in 90ms :: {"success":true,"data":{"coins":[{"symbol":"BTC"…
+FinBERT analysis error: SentimentAnalysisError: HuggingFace API error: 401 - Unauthorized
+    at analyzeSentimentWithHuggingFace (/home/runner/workspace/server/services/huggingface-service.ts:136:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async analyzeSentiment (/home/runner/workspace/server/services/huggingface-service.ts:276:12)
+    at async <anonymous> (/home/runner/workspace/server/services/huggingface-service.ts:311:16)
+    at async Promise.allSettled (index 1)
+    at async analyzeMultipleTexts (/home/runner/workspace/server/services/huggingface-service.ts:318:26)
+    at async analyzeNewsForCoin (/home/runner/workspace/server/services/market-analysis-service.ts:286:30)
+    at async Promise.all (index 1) {
+  code: 'API_ERROR',
+  details: undefined
+}
+FinBERT analysis error: SentimentAnalysisError: HuggingFace API error: 401 - Unauthorized
+    at analyzeSentimentWithHuggingFace (/home/runner/workspace/server/services/huggingface-service.ts:136:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async analyzeSentiment (/home/runner/workspace/server/services/huggingface-service.ts:276:12)
+    at async <anonymous> (/home/runner/workspace/server/services/huggingface-service.ts:311:16)
+    at async Promise.allSettled (index 2)
+    at async analyzeMultipleTexts (/home/runner/workspace/server/services/huggingface-service.ts:318:26)
+    at async analyzeNewsForCoin (/home/runner/workspace/server/services/market-analysis-service.ts:286:30)
+    at async Promise.all (index 1) {
+  code: 'API_ERROR',
+  details: undefined
+}
+FinBERT analysis error: SentimentAnalysisError: HuggingFace API error: 401 - Unauthorized
+    at analyzeSentimentWithHuggingFace (/home/runner/workspace/server/services/huggingface-service.ts:136:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async analyzeSentiment (/home/runner/workspace/server/services/huggingface-service.ts:276:12)
+    at async <anonymous> (/home/runner/workspace/server/services/huggingface-service.ts:311:16)
+    at async Promise.allSettled (index 0)
+    at async analyzeMultipleTexts (/home/runner/workspace/server/services/huggingface-service.ts:318:26)
+    at async analyzeNewsForCoin (/home/runner/workspace/server/services/market-analysis-service.ts:286:30)
+    at async Promise.all (index 1) {
+  code: 'API_ERROR',
+  details: undefined
+}
+Analysis complete in 99ms:
+- Total texts: 3
+- Successful: 0
+- Fallback used: 3
+- Average time per text: 33ms
+Fetching top cryptocurrencies from Binance...
+Binance API error: Error: Binance API error: 451 
+    at BinanceClient.getTopCryptocurrencies (/home/runner/workspace/server/api-clients.ts:33:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:344:28)
+Generating market analysis for BTC...
+Fetching real market data from Binance for BTCUSDT...
+Starting analysis of 3 texts...
+Analyzing sentiment with FinBERT model
+Analyzing sentiment with FinBERT model
+Analyzing sentiment with FinBERT model
+Klines error: Error: Binance klines error: 451
+    at BinanceClient.getKlines (/home/runner/workspace/server/api-clients.ts:142:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:268:29)
+Error: CustomAPIError: Failed to fetch chart data
+    at <anonymous> (/home/runner/workspace/server/routes.ts:316:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  code: 'CHART_DATA_UNAVAILABLE',
+  statusCode: 503,
+  details: {
+    originalError: 'Binance klines error: 451',
+    suggestion: 'Try again later or check your connection'
+  }
+}
+8:44:31 PM [express] GET /api/market/data 503 in 17ms :: {"success":false,"error":{"message":"Failed…
+Market data error: MarketAnalysisError: HTTP error! status: 451 - 
+    at fetchWithRetry (/home/runner/workspace/server/services/market-analysis-service.ts:125:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async getBinanceMarketData (/home/runner/workspace/server/services/market-analysis-service.ts:179:18)
+    at async Promise.all (index 0)
+    at async generateMarketAnalysis (/home/runner/workspace/server/services/market-analysis-service.ts:415:40)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:356:26) {
+  code: 'API_ERROR',
+  statusCode: 451,
+  details: undefined
+}
+Error generating market analysis: MarketAnalysisError: HTTP error! status: 451 - 
+    at fetchWithRetry (/home/runner/workspace/server/services/market-analysis-service.ts:125:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async getBinanceMarketData (/home/runner/workspace/server/services/market-analysis-service.ts:179:18)
+    at async Promise.all (index 0)
+    at async generateMarketAnalysis (/home/runner/workspace/server/services/market-analysis-service.ts:415:40)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:356:26) {
+  code: 'API_ERROR',
+  statusCode: 451,
+  details: undefined
+}
+Error: CustomAPIError: Failed to generate market analysis
+    at <anonymous> (/home/runner/workspace/server/routes.ts:363:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  code: 'ANALYSIS_FAILED',
+  statusCode: 503,
+  details: {
+    originalError: 'HTTP error! status: 451 - ',
+    suggestion: 'Try refreshing or selecting a different cryptocurrency'
+  }
+}
+8:44:31 PM [express] GET /api/market/analysis/BTC 503 in 28ms :: {"success":false,"error":{"message"…
+FinBERT analysis error: SentimentAnalysisError: HuggingFace API error: 401 - Unauthorized
+    at analyzeSentimentWithHuggingFace (/home/runner/workspace/server/services/huggingface-service.ts:136:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async analyzeSentiment (/home/runner/workspace/server/services/huggingface-service.ts:276:12)
+    at async <anonymous> (/home/runner/workspace/server/services/huggingface-service.ts:311:16)
+    at async Promise.allSettled (index 2)
+    at async analyzeMultipleTexts (/home/runner/workspace/server/services/huggingface-service.ts:318:26)
+    at async analyzeNewsForCoin (/home/runner/workspace/server/services/market-analysis-service.ts:286:30)
+    at async Promise.all (index 1) {
+  code: 'API_ERROR',
+  details: undefined
+}
+FinBERT analysis error: SentimentAnalysisError: HuggingFace API error: 401 - Unauthorized
+    at analyzeSentimentWithHuggingFace (/home/runner/workspace/server/services/huggingface-service.ts:136:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async analyzeSentiment (/home/runner/workspace/server/services/huggingface-service.ts:276:12)
+    at async <anonymous> (/home/runner/workspace/server/services/huggingface-service.ts:311:16)
+    at async Promise.allSettled (index 0)
+    at async analyzeMultipleTexts (/home/runner/workspace/server/services/huggingface-service.ts:318:26)
+    at async analyzeNewsForCoin (/home/runner/workspace/server/services/market-analysis-service.ts:286:30)
+    at async Promise.all (index 1) {
+  code: 'API_ERROR',
+  details: undefined
+}
+FinBERT analysis error: SentimentAnalysisError: HuggingFace API error: 401 - Unauthorized
+    at analyzeSentimentWithHuggingFace (/home/runner/workspace/server/services/huggingface-service.ts:136:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async analyzeSentiment (/home/runner/workspace/server/services/huggingface-service.ts:276:12)
+    at async <anonymous> (/home/runner/workspace/server/services/huggingface-service.ts:311:16)
+    at async Promise.allSettled (index 1)
+    at async analyzeMultipleTexts (/home/runner/workspace/server/services/huggingface-service.ts:318:26)
+    at async analyzeNewsForCoin (/home/runner/workspace/server/services/market-analysis-service.ts:286:30)
+    at async Promise.all (index 1) {
+  code: 'API_ERROR',
+  details: undefined
+}
+Analysis complete in 60ms:
+- Total texts: 3
+- Successful: 0
+- Fallback used: 3
+- Average time per text: 20ms
+Klines error: Error: Binance klines error: 451
+    at BinanceClient.getKlines (/home/runner/workspace/server/api-clients.ts:142:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:268:29)
+Error: CustomAPIError: Failed to fetch chart data
+    at <anonymous> (/home/runner/workspace/server/routes.ts:316:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  code: 'CHART_DATA_UNAVAILABLE',
+  statusCode: 503,
+  details: {
+    originalError: 'Binance klines error: 451',
+    suggestion: 'Try again later or check your connection'
+  }
+}
+8:44:33 PM [express] GET /api/market/data 503 in 15ms :: {"success":false,"error":{"message":"Failed…
+Fetching top cryptocurrencies from Binance...
+Binance API error: Error: Binance API error: 451 
+    at BinanceClient.getTopCryptocurrencies (/home/runner/workspace/server/api-clients.ts:33:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:344:28)
+Generating market analysis for BTC...
+Fetching real market data from Binance for BTCUSDT...
+Starting analysis of 3 texts...
+Analyzing sentiment with FinBERT model
+Analyzing sentiment with FinBERT model
+Analyzing sentiment with FinBERT model
+Market data error: MarketAnalysisError: HTTP error! status: 451 - 
+    at fetchWithRetry (/home/runner/workspace/server/services/market-analysis-service.ts:125:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async getBinanceMarketData (/home/runner/workspace/server/services/market-analysis-service.ts:179:18)
+    at async Promise.all (index 0)
+    at async generateMarketAnalysis (/home/runner/workspace/server/services/market-analysis-service.ts:415:40)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:356:26) {
+  code: 'API_ERROR',
+  statusCode: 451,
+  details: undefined
+}
+Error generating market analysis: MarketAnalysisError: HTTP error! status: 451 - 
+    at fetchWithRetry (/home/runner/workspace/server/services/market-analysis-service.ts:125:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async getBinanceMarketData (/home/runner/workspace/server/services/market-analysis-service.ts:179:18)
+    at async Promise.all (index 0)
+    at async generateMarketAnalysis (/home/runner/workspace/server/services/market-analysis-service.ts:415:40)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:356:26) {
+  code: 'API_ERROR',
+  statusCode: 451,
+  details: undefined
+}
+Error: CustomAPIError: Failed to generate market analysis
+    at <anonymous> (/home/runner/workspace/server/routes.ts:363:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  code: 'ANALYSIS_FAILED',
+  statusCode: 503,
+  details: {
+    originalError: 'HTTP error! status: 451 - ',
+    suggestion: 'Try refreshing or selecting a different cryptocurrency'
+  }
+}
+8:44:33 PM [express] GET /api/market/analysis/BTC 503 in 29ms :: {"success":false,"error":{"message"…
+FinBERT analysis error: SentimentAnalysisError: HuggingFace API error: 401 - Unauthorized
+    at analyzeSentimentWithHuggingFace (/home/runner/workspace/server/services/huggingface-service.ts:136:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async analyzeSentiment (/home/runner/workspace/server/services/huggingface-service.ts:276:12)
+    at async <anonymous> (/home/runner/workspace/server/services/huggingface-service.ts:311:16)
+    at async Promise.allSettled (index 2)
+    at async analyzeMultipleTexts (/home/runner/workspace/server/services/huggingface-service.ts:318:26)
+    at async analyzeNewsForCoin (/home/runner/workspace/server/services/market-analysis-service.ts:286:30)
+    at async Promise.all (index 1) {
+  code: 'API_ERROR',
+  details: undefined
+}
+FinBERT analysis error: SentimentAnalysisError: HuggingFace API error: 401 - Unauthorized
+    at analyzeSentimentWithHuggingFace (/home/runner/workspace/server/services/huggingface-service.ts:136:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async analyzeSentiment (/home/runner/workspace/server/services/huggingface-service.ts:276:12)
+    at async <anonymous> (/home/runner/workspace/server/services/huggingface-service.ts:311:16)
+    at async Promise.allSettled (index 0)
+    at async analyzeMultipleTexts (/home/runner/workspace/server/services/huggingface-service.ts:318:26)
+    at async analyzeNewsForCoin (/home/runner/workspace/server/services/market-analysis-service.ts:286:30)
+    at async Promise.all (index 1) {
+  code: 'API_ERROR',
+  details: undefined
+}
+FinBERT analysis error: SentimentAnalysisError: HuggingFace API error: 401 - Unauthorized
+    at analyzeSentimentWithHuggingFace (/home/runner/workspace/server/services/huggingface-service.ts:136:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async analyzeSentiment (/home/runner/workspace/server/services/huggingface-service.ts:276:12)
+    at async <anonymous> (/home/runner/workspace/server/services/huggingface-service.ts:311:16)
+    at async Promise.allSettled (index 1)
+    at async analyzeMultipleTexts (/home/runner/workspace/server/services/huggingface-service.ts:318:26)
+    at async analyzeNewsForCoin (/home/runner/workspace/server/services/market-analysis-service.ts:286:30)
+    at async Promise.all (index 1) {
+  code: 'API_ERROR',
+  details: undefined
+}
+Analysis complete in 60ms:
+- Total texts: 3
+- Successful: 0
+- Fallback used: 3
+- Average time per text: 20ms

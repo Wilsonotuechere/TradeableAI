@@ -1,0 +1,312 @@
+import type { Express, Request, Response, NextFunction } from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
+import { insertChatHistorySchema, ChatMessage } from "@shared/schema";
+import { randomUUID } from "crypto";
+import {
+  binanceClient,
+  newsClient,
+  sentimentClient,
+  twitterClient,
+  aiClient,
+} from "./api-clients";
+import { determineMessageIntent } from "./utils/message-intent";
+import { callGeminiAPI, generateChatPrompt } from "./services/gemini-service";
+import { generateMarketAnalysis } from "./services/market-analysis-service";
+import { analyzeSentimentWithHuggingFace } from "./services/huggingface-service";
+
+// Error handling class for API errors
+class CustomAPIError extends Error {
+  code: string;
+  statusCode: number;
+  details?: any;
+
+  constructor(message: string, statusCode = 500, code = 'INTERNAL_ERROR', details?: any) {
+    super(message);
+    this.name = 'CustomAPIError';
+    this.statusCode = statusCode;
+    this.code = code;
+    this.details = details;
+  }
+}
+
+// Global error handler middleware
+function errorHandler(err: Error | CustomAPIError, req: Request, res: Response, next: NextFunction) {
+  console.error('Error:', err);
+
+  if (err instanceof CustomAPIError) {
+    return res.status(err.statusCode).json({
+      success: false,
+      error: {
+        message: err.message,
+        code: err.code,
+        details: err.details
+      }
+    });
+  }
+
+  // Handle unknown errors
+  return res.status(500).json({
+    success: false,
+    error: {
+      message: 'An unexpected error occurred',
+      code: 'INTERNAL_ERROR',
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    }
+  });
+}
+
+// Async route handler wrapper
+const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
+};
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  // Market data routes
+  app.get("/api/market", asyncHandler(async (req, res) => {
+    console.log("Fetching real market data from Binance...");
+    
+    try {
+      const [realMarketData, realMarketStats] = await Promise.all([
+        binanceClient.getTopCryptocurrencies(),
+        binanceClient.getMarketStats(),
+      ]);
+
+      if (!realMarketData?.length) {
+        throw new CustomAPIError(
+          "No market data available",
+          503,
+          "NO_MARKET_DATA"
+        );
+      }
+
+      res.json({
+        success: true,
+        data: {
+          coins: realMarketData,
+          stats: realMarketStats,
+          dataSource: "Real-time market data",
+          lastUpdated: new Date().toISOString(),
+        },
+      });
+    } catch (error) {
+      console.error("Market data error:", error);
+
+      try {
+        const fallbackData = await storage.getMarketData();
+        const fallbackStats = await storage.getMarketStats();
+
+        if (!fallbackData?.length) {
+          throw new CustomAPIError(
+            "No market data available",
+            503,
+            "NO_MARKET_DATA"
+          );
+        }
+
+        res.json({
+          success: true,
+          data: {
+            coins: fallbackData,
+            stats: fallbackStats,
+            dataSource: "Fallback data",
+            lastUpdated: new Date().toISOString(),
+          },
+          warning: "Using cached data due to API connectivity issues",
+        });
+      } catch (fallbackError) {
+        throw new CustomAPIError(
+          "Failed to fetch market data",
+          503,
+          "MARKET_DATA_UNAVAILABLE",
+          {
+            originalError: error instanceof Error ? error.message : "Unknown error",
+            suggestion: "Try again later or check your connection"
+          }
+        );
+      }
+    }
+  }));
+
+  // News routes
+  app.get("/api/news", asyncHandler(async (req, res) => {
+    try {
+      console.log("Fetching real news data from News API...");
+      const newsArticles = await newsClient.getCryptoNews();
+      const sentiment = await sentimentClient.calculateOverallSentiment(newsArticles);
+      
+      const articles = await Promise.all(
+        newsArticles.slice(0, 8).map(async (article) => ({
+          id: randomUUID(),
+          ...article,
+          sentiment: await sentimentClient.analyzeSentiment(article.title),
+          createdAt: new Date(),
+        }))
+      );
+
+      res.json({
+        success: true,
+        data: { articles, sentiment },
+      });
+    } catch (error) {
+      console.warn("News API failed, falling back to stored data:", error);
+      
+      try {
+        const articles = await storage.getNewsArticles();
+        const sentiment = await storage.getSentimentData();
+
+        if (!articles?.length) {
+          throw new CustomAPIError(
+            "No news data available",
+            503,
+            "NO_NEWS_DATA"
+          );
+        }
+
+        res.json({
+          success: true,
+          data: {
+            articles,
+            sentiment,
+            source: "fallback"
+          },
+        });
+      } catch (fallbackError) {
+        throw new CustomAPIError(
+          "Failed to fetch news data",
+          503,
+          "NEWS_UNAVAILABLE",
+          {
+            originalError: error instanceof Error ? error.message : "Unknown error",
+            suggestion: "Try again later or check your connection"
+          }
+        );
+      }
+    }
+  }));
+
+  // Chat routes
+  app.post("/api/chat", asyncHandler(async (req, res) => {
+    const { message, conversationId } = req.body;
+
+    if (!message || typeof message !== "string") {
+      throw new CustomAPIError(
+        "Message is required",
+        400,
+        "INVALID_REQUEST",
+        { required: ['message'] }
+      );
+    }
+
+    try {
+      console.log("Generating AI response with market context...");
+      let marketContext;
+
+      try {
+        const [marketData, marketStats] = await Promise.all([
+          binanceClient.getTopCryptocurrencies(),
+          binanceClient.getMarketStats(),
+        ]);
+
+        marketContext = {
+          topCoin: marketData[0],
+          stats: marketStats,
+          coins: marketData.slice(0, 3),
+        };
+      } catch (contextError) {
+        console.warn("Failed to fetch real-time market context:", contextError);
+        const [coins, stats] = await Promise.all([
+          storage.getMarketData(),
+          storage.getMarketStats(),
+        ]);
+        marketContext = {
+          topCoin: coins[0],
+          stats,
+          coins: coins.slice(0, 3),
+        };
+      }
+
+      const chatPrompt = generateChatPrompt(message, marketContext);
+      const aiResponse = await callGeminiAPI(chatPrompt);
+
+      const response: ChatMessage = {
+        id: randomUUID(),
+        role: "assistant",
+        content: aiResponse,
+        timestamp: new Date().toISOString(),
+        intent: determineMessageIntent(message),
+      };
+
+      res.json({
+        success: true,
+        data: { message: response },
+      });
+    } catch (error) {
+      throw new CustomAPIError(
+        "Failed to generate response",
+        503,
+        "AI_RESPONSE_FAILED",
+        {
+          originalError: error instanceof Error ? error.message : "Unknown error",
+          suggestion: "Try rephrasing your message"
+        }
+      );
+    }
+  }));
+
+  // Register error handling middleware last
+  app.use(errorHandler);
+
+  const httpServer = createServer(app);
+  return httpServer;
+}
+
+// Helper functions for market analysis
+function calculateSMA(prices: number[], period: number): number[] {
+  const sma: number[] = [];
+  for (let i = 0; i < prices.length; i++) {
+    if (i < period - 1) {
+      sma.push(prices[i]);
+      continue;
+    }
+    const sum = prices.slice(i - period + 1, i + 1).reduce((a, b) => a + b, 0);
+    sma.push(sum / period);
+  }
+  return sma;
+}
+
+function calculateRSI(prices: number[], period: number = 14): number[] {
+  if (prices.length < period + 1) {
+    return new Array(prices.length).fill(50);
+  }
+
+  const gains: number[] = [];
+  const losses: number[] = [];
+
+  for (let i = 1; i < prices.length; i++) {
+    const difference = prices[i] - prices[i - 1];
+    gains.push(difference > 0 ? difference : 0);
+    losses.push(difference < 0 ? -difference : 0);
+  }
+
+  const rsi: number[] = [];
+  let avgGain = gains.slice(0, period).reduce((a, b) => a + b) / period;
+  let avgLoss = losses.slice(0, period).reduce((a, b) => a + b) / period;
+
+  rsi.push(100 - 100 / (1 + avgGain / avgLoss));
+
+  for (let i = period; i < gains.length; i++) {
+    avgGain = (avgGain * (period - 1) + gains[i]) / period;
+    avgLoss = (avgLoss * (period - 1) + losses[i]) / period;
+
+    if (avgLoss === 0) {
+      rsi.push(100);
+    } else {
+      rsi.push(100 - 100 / (1 + avgGain / avgLoss));
+    }
+  }
+
+  return [...new Array(period).fill(50), ...rsi];
+}

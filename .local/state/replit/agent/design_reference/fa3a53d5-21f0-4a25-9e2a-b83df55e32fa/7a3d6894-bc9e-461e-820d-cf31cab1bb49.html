@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tradeable - Crypto Trading Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    'navy': '#0A0F2C',
+                    'electric': '#1F8EF1',
+                    'neon': '#9B5DE5',
+                    'emerald': '#2ECC71',
+                    'amber': '#F1C40F',
+                    'off-white': '#F8F9FA',
+                    'cool-gray': '#9AA0A6'
+                },
+                fontFamily: {
+                    'grotesk': ['Space Grotesk', 'sans-serif'],
+                    'inter': ['Inter', 'sans-serif'],
+                    'mono': ['JetBrains Mono', 'monospace']
+                },
+                animation: {
+                    'pulse-glow': 'pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    'gradient': 'gradient 3s ease infinite',
+                    'number-roll': 'number-roll 0.5s ease-out'
+                },
+                keyframes: {
+                    'pulse-glow': {
+                        '0%, 100%': { boxShadow: '0 0 0 0 rgba(31, 142, 241, 0.7)' },
+                        '50%': { boxShadow: '0 0 0 10px rgba(31, 142, 241, 0)' }
+                    },
+                    'gradient': {
+                        '0%': { backgroundPosition: '0% 50%' },
+                        '50%': { backgroundPosition: '100% 50%' },
+                        '100%': { backgroundPosition: '0% 50%' }
+                    },
+                    'number-roll': {
+                        '0%': { transform: 'translateY(20px)', opacity: '0' },
+                        '100%': { transform: 'translateY(0)', opacity: '1' }
+                    }
+                }
+            }
+        }
+    };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-navy text-off-white font-inter min-h-screen">
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 w-full bg-navy/80 backdrop-blur-md border-b border-electric/20 z-50">
+        <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-r from-electric to-neon flex items-center justify-center">
+                    <i class="fas fa-chart-line text-white text-sm"></i>
+                </div>
+                <span class="font-grotesk font-bold text-xl">Tradeable</span>
+            </div>
+            
+            <div class="hidden md:flex items-center space-x-8">
+                <button onclick="showPage('home')" class="nav-link text-off-white/80 hover:text-electric transition-colors">Home</button>
+                <button onclick="showPage('chat')" class="nav-link text-off-white/80 hover:text-electric transition-colors">AI Chat</button>
+                <button onclick="showPage('market')" class="nav-link text-off-white/80 hover:text-electric transition-colors">Market</button>
+                <button onclick="showPage('news')" class="nav-link text-off-white/80 hover:text-electric transition-colors">News</button>
+                <button onclick="showPage('history')" class="nav-link text-off-white/80 hover:text-electric transition-colors">History</button>
+            </div>
+            
+            <button class="md:hidden text-off-white">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Home Page -->
+    <div id="home-page" class="page-content pt-20">
+        <!-- Hero Section -->
+        <div class="relative min-h-screen flex items-center justify-center overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-br from-electric/10 via-navy to-neon/10 animate-gradient bg-400% opacity-50"></div>
+            
+            <!-- Crypto market background pattern -->
+            <div class="absolute inset-0 opacity-5">
+                <!-- Cryptocurrency trading charts background -->
+                <img src="https://images.unsplash.com/photo-1642790106117-e829e14a795f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&h=1080" alt="Cryptocurrency charts background" class="w-full h-full object-cover" />
+            </div>
+            
+            <div class="relative z-10 max-w-4xl mx-auto px-6 text-center">
+                <h1 class="font-grotesk font-bold text-5xl md:text-7xl mb-6 leading-tight">
+                    Your <span class="bg-gradient-to-r from-electric to-neon bg-clip-text text-transparent">AI-Powered</span><br>
+                    Crypto Assistant
+                </h1>
+                
+                <p class="text-xl md:text-2xl text-cool-gray mb-8 max-w-2xl mx-auto leading-relaxed">
+                    Get beginner-friendly crypto market insights, sentiment analysis, and trading education—no complex jargon, just clear guidance.
+                </p>
+                
+                <div class="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+                    <button onclick="showPage('chat')" class="group px-8 py-4 bg-gradient-to-r from-electric to-neon rounded-xl font-medium text-lg hover:shadow-2xl hover:shadow-electric/50 transition-all duration-300 transform hover:-translate-y-1">
+                        <i class="fas fa-comments mr-2"></i>
+                        Start Chatting
+                        <i class="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform"></i>
+                    </button>
+                    
+                    <button onclick="showPage('market')" class="px-8 py-4 bg-white/10 backdrop-blur border border-electric/30 rounded-xl font-medium text-lg hover:bg-white/20 transition-all duration-300">
+                        <i class="fas fa-chart-bar mr-2"></i>
+                        View Markets
+                    </button>
+                </div>
+                
+                <!-- Feature Cards -->
+                <div class="grid md:grid-cols-3 gap-6 mt-16">
+                    <div class="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-electric/20 hover:border-electric/40 transition-all duration-300 hover:-translate-y-2">
+                        <div class="w-12 h-12 bg-emerald/20 rounded-lg flex items-center justify-center mb-4 mx-auto">
+                            <i class="fas fa-brain text-emerald text-xl"></i>
+                        </div>
+                        <h3 class="font-grotesk font-semibold text-xl mb-3">AI Market Analysis</h3>
+                        <p class="text-cool-gray">Get complex market data explained in simple, beginner-friendly terms.</p>
+                    </div>
+                    
+                    <div class="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-electric/20 hover:border-electric/40 transition-all duration-300 hover:-translate-y-2">
+                        <div class="w-12 h-12 bg-neon/20 rounded-lg flex items-center justify-center mb-4 mx-auto">
+                            <i class="fas fa-newspaper text-neon text-xl"></i>
+                        </div>
+                        <h3 class="font-grotesk font-semibold text-xl mb-3">News Sentiment</h3>
+                        <p class="text-cool-gray">Track market sentiment from news and social media with real-time analysis.</p>
+                    </div>
+                    
+                    <div class="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-electric/20 hover:border-electric/40 transition-all duration-300 hover:-translate-y-2">
+                        <div class="w-12 h-12 bg-amber/20 rounded-lg flex items-center justify-center mb-4 mx-auto">
+                            <i class="fas fa-lightbulb text-amber text-xl"></i>
+                        </div>
+                        <h3 class="font-grotesk font-semibold text-xl mb-3">Educational Focus</h3>
+                        <p class="text-cool-gray">Learn crypto trading concepts without overwhelming complexity.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Page -->
+    <div id="chat-page" class="page-content pt-20 hidden">
+        <div class="max-w-4xl mx-auto px-6 py-8">
+            <div class="bg-white/5 backdrop-blur-md rounded-2xl border border-electric/20 min-h-[80vh] flex flex-col">
+                <!-- Chat Header -->
+                <div class="p-6 border-b border-electric/20">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-gradient-to-r from-electric to-neon rounded-full flex items-center justify-center animate-pulse-glow">
+                                <i class="fas fa-robot text-white"></i>
+                            </div>
+                            <div>
+                                <h2 class="font-grotesk font-semibold text-xl">AI Trading Assistant</h2>
+                                <p class="text-cool-gray text-sm">Ask me anything about crypto markets</p>
+                            </div>
+                        </div>
+                        <div class="text-emerald text-sm flex items-center">
+                            <div class="w-2 h-2 bg-emerald rounded-full mr-2"></div>
+                            Online
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Messages -->
+                <div class="flex-1 p-6 space-y-6 overflow-y-auto" id="chat-messages">
+                    <!-- AI Message -->
+                    <div class="flex items-start space-x-3">
+                        <div class="w-8 h-8 bg-gradient-to-r from-electric to-neon rounded-full flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-robot text-white text-xs"></i>
+                        </div>
+                        <div class="bg-white/10 backdrop-blur rounded-2xl rounded-tl-sm p-4 max-w-lg">
+                            <p class="mb-2">Hi! I'm your crypto trading assistant. I can help you understand market trends, analyze news sentiment, and explain complex trading concepts in simple terms.</p>
+                            <p class="text-sm text-cool-gray italic">This is information, not financial advice.</p>
+                        </div>
+                    </div>
+
+                    <!-- User Message -->
+                    <div class="flex items-start space-x-3 justify-end">
+                        <div class="bg-electric rounded-2xl rounded-tr-sm p-4 max-w-lg">
+                            <p>What's happening with Bitcoin today?</p>
+                        </div>
+                        <div class="w-8 h-8 bg-cool-gray/20 rounded-full flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-user text-cool-gray text-xs"></i>
+                        </div>
+                    </div>
+
+                    <!-- AI Response -->
+                    <div class="flex items-start space-x-3">
+                        <div class="w-8 h-8 bg-gradient-to-r from-electric to-neon rounded-full flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-robot text-white text-xs"></i>
+                        </div>
+                        <div class="bg-white/10 backdrop-blur rounded-2xl rounded-tl-sm p-4 max-w-2xl">
+                            <p class="mb-4">Based on current market data, Bitcoin is showing some interesting movements today:</p>
+                            <div class="space-y-3 mb-4">
+                                <div class="flex items-center justify-between p-3 bg-emerald/20 rounded-lg">
+                                    <span>Current Price</span>
+                                    <span class="font-mono font-semibold text-emerald">$43,247.82 (+2.4%)</span>
+                                </div>
+                                <div class="flex items-center justify-between p-3 bg-neon/20 rounded-lg">
+                                    <span>24h Volume</span>
+                                    <span class="font-mono">$28.4B</span>
+                                </div>
+                            </div>
+                            <p class="mb-2">The price increase seems to be driven by positive news about institutional adoption and reduced selling pressure. Market sentiment is cautiously optimistic.</p>
+                            <p class="text-sm text-cool-gray italic">This is information, not financial advice.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Input -->
+                <div class="p-6 border-t border-electric/20">
+                    <div class="flex space-x-4">
+                        <input 
+                            type="text" 
+                            placeholder="Ask me about crypto markets, news, or trading concepts..."
+                            class="flex-1 bg-white/5 border border-electric/30 rounded-xl px-4 py-3 focus:outline-none focus:border-electric transition-colors"
+                        >
+                        <button class="px-6 py-3 bg-gradient-to-r from-electric to-neon rounded-xl hover:shadow-lg transition-all">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Market Page -->
+    <div id="market-page" class="page-content pt-20 hidden">
+        <div class="max-w-7xl mx-auto px-6 py-8">
+            <div class="mb-8">
+                <h1 class="font-grotesk font-bold text-3xl mb-2">Market Overview</h1>
+                <p class="text-cool-gray">Real-time cryptocurrency market data and analysis</p>
+            </div>
+
+            <!-- Market Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-electric/20">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-cool-gray">Market Cap</span>
+                        <i class="fas fa-chart-pie text-electric"></i>
+                    </div>
+                    <div class="font-mono font-semibold text-2xl">$1.73T</div>
+                    <div class="text-emerald text-sm">+2.4% 24h</div>
+                </div>
+                
+                <div class="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-electric/20">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-cool-gray">24h Volume</span>
+                        <i class="fas fa-exchange-alt text-neon"></i>
+                    </div>
+                    <div class="font-mono font-semibold text-2xl">$86.2B</div>
+                    <div class="text-emerald text-sm">+12.1% 24h</div>
+                </div>
+                
+                <div class="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-electric/20">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-cool-gray">BTC Dominance</span>
+                        <i class="fab fa-bitcoin text-amber"></i>
+                    </div>
+                    <div class="font-mono font-semibold text-2xl">52.4%</div>
+                    <div class="text-red-400 text-sm">-0.8% 24h</div>
+                </div>
+                
+                <div class="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-electric/20">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-cool-gray">Fear & Greed</span>
+                        <i class="fas fa-thermometer-half text-amber"></i>
+                    </div>
+                    <div class="font-mono font-semibold text-2xl">64</div>
+                    <div class="text-amber text-sm">Greed</div>
+                </div>
+            </div>
+
+            <!-- Charts and Top Cryptos -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Price Chart -->
+                <div class="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-electric/20">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="font-grotesk font-semibold text-xl">Bitcoin Price Chart</h3>
+                        <div class="flex space-x-2">
+                            <button class="px-3 py-1 text-sm bg-electric/20 text-electric rounded-lg">24H</button>
+                            <button class="px-3 py-1 text-sm text-cool-gray hover:text-electric">7D</button>
+                            <button class="px-3 py-1 text-sm text-cool-gray hover:text-electric">30D</button>
+                        </div>
+                    </div>
+                    <div class="h-64">
+                        <canvas id="priceChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Top Cryptocurrencies -->
+                <div class="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-electric/20">
+                    <h3 class="font-grotesk font-semibold text-xl mb-6">Top Cryptocurrencies</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-4 bg-white/5 rounded-xl hover:bg-white/10 transition-colors cursor-pointer">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 bg-amber rounded-full flex items-center justify-center">
+                                    <i class="fab fa-bitcoin text-navy text-sm"></i>
+                                </div>
+                                <div>
+                                    <div class="font-medium">Bitcoin</div>
+                                    <div class="text-cool-gray text-sm">BTC</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-mono font-medium">$43,247.82</div>
+                                <div class="text-emerald text-sm">+2.4%</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-4 bg-white/5 rounded-xl hover:bg-white/10 transition-colors cursor-pointer">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                                    <i class="fab fa-ethereum text-white text-sm"></i>
+                                </div>
+                                <div>
+                                    <div class="font-medium">Ethereum</div>
+                                    <div class="text-cool-gray text-sm">ETH</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-mono font-medium">$2,643.91</div>
+                                <div class="text-emerald text-sm">+3.1%</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-4 bg-white/5 rounded-xl hover:bg-white/10 transition-colors cursor-pointer">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                                    <span class="text-white text-xs font-bold">S</span>
+                                </div>
+                                <div>
+                                    <div class="font-medium">Solana</div>
+                                    <div class="text-cool-gray text-sm">SOL</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-mono font-medium">$98.43</div>
+                                <div class="text-red-400 text-sm">-1.2%</div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-4 bg-white/5 rounded-xl hover:bg-white/10 transition-colors cursor-pointer">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center">
+                                    <span class="text-white text-xs font-bold">A</span>
+                                </div>
+                                <div>
+                                    <div class="font-medium">Cardano</div>
+                                    <div class="text-cool-gray text-sm">ADA</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-mono font-medium">$0.4821</div>
+                                <div class="text-emerald text-sm">+5.7%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Market Summary -->
+            <div class="mt-8">
+                <div class="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-electric/20">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-10 h-10 bg-gradient-to-r from-electric to-neon rounded-full flex items-center justify-center animate-pulse-glow">
+                            <i class="fas fa-robot text-white"></i>
+                        </div>
+                        <h3 class="font-grotesk font-semibold text-xl">AI Market Summary</h3>
+                    </div>
+                    <div class="space-y-3">
+                        <p>Today's crypto market is showing strong bullish momentum with Bitcoin leading the charge above $43,000. This price action is supported by increased institutional interest and positive regulatory developments.</p>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="px-3 py-1 bg-emerald/20 text-emerald rounded-full text-sm">Bullish Sentiment</span>
+                            <span class="px-3 py-1 bg-electric/20 text-electric rounded-full text-sm">High Volume</span>
+                            <span class="px-3 py-1 bg-neon/20 text-neon rounded-full text-sm">Institutional Interest</span>
+                        </div>
+                        <p class="text-sm text-cool-gray italic">This is information, not financial advice.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- News Page -->
+    <div id="news-page" class="page-content pt-20 hidden">
+        <div class="max-w-6xl mx-auto px-6 py-8">
+            <div class="mb-8">
+                <h1 class="font-grotesk font-bold text-3xl mb-2">News & Sentiment</h1>
+                <p class="text-cool-gray">Latest crypto news with AI-powered sentiment analysis</p>
+            </div>
+
+            <!-- Market Mood Indicator -->
+            <div class="mb-8">
+                <div class="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-electric/20">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="font-grotesk font-semibold text-xl">Market Mood</h3>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-3 h-3 bg-emerald rounded-full animate-pulse"></div>
+                            <span class="text-emerald text-sm">Bullish</span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="text-center p-4 bg-emerald/20 rounded-xl">
+                            <div class="text-2xl mb-2">😊</div>
+                            <div class="text-emerald font-semibold">Positive</div>
+                            <div class="text-emerald text-sm">64%</div>
+                        </div>
+                        <div class="text-center p-4 bg-amber/20 rounded-xl">
+                            <div class="text-2xl mb-2">😐</div>
+                            <div class="text-amber font-semibold">Neutral</div>
+                            <div class="text-amber text-sm">28%</div>
+                        </div>
+                        <div class="text-center p-4 bg-red-500/20 rounded-xl">
+                            <div class="text-2xl mb-2">😟</div>
+                            <div class="text-red-400 font-semibold">Negative</div>
+                            <div class="text-red-400 text-sm">8%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- News Articles -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-electric/20 hover:border-electric/40 transition-all duration-300">
+                    <!-- Financial news article about cryptocurrency -->
+                    <img src="https://images.unsplash.com/photo-1639322537228-f710d846310a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400" alt="Bitcoin and cryptocurrency market analysis" class="w-full h-48 object-cover rounded-xl mb-4" />
+                    <div class="flex items-center space-x-2 mb-3">
+                        <span class="px-3 py-1 bg-emerald/20 text-emerald rounded-full text-sm">Positive</span>
+                        <span class="text-cool-gray text-sm">2 hours ago</span>
+                    </div>
+                    <h3 class="font-grotesk font-semibold text-lg mb-3">Bitcoin Reaches New Monthly High Amid Institutional Adoption</h3>
+                    <p class="text-cool-gray mb-4">Major financial institutions continue to show increased interest in Bitcoin, driving price momentum and market confidence to new levels this month.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-cool-gray text-sm">CoinDesk</span>
+                        <button class="text-electric hover:text-neon transition-colors">
+                            <i class="fas fa-external-link-alt"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-electric/20 hover:border-electric/40 transition-all duration-300">
+                    <!-- Ethereum blockchain technology news -->
+                    <img src="https://images.unsplash.com/photo-1640340434855-6084b1f4901c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400" alt="Ethereum blockchain network visualization" class="w-full h-48 object-cover rounded-xl mb-4" />
+                    <div class="flex items-center space-x-2 mb-3">
+                        <span class="px-3 py-1 bg-emerald/20 text-emerald rounded-full text-sm">Positive</span>
+                        <span class="text-cool-gray text-sm">4 hours ago</span>
+                    </div>
+                    <h3 class="font-grotesk font-semibold text-lg mb-3">Ethereum Network Sees Record Transaction Volume</h3>
+                    <p class="text-cool-gray mb-4">The Ethereum blockchain processed a record number of transactions this week, highlighting growing adoption of decentralized applications and smart contracts.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-cool-gray text-sm">The Block</span>
+                        <button class="text-electric hover:text-neon transition-colors">
+                            <i class="fas fa-external-link-alt"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-electric/20 hover:border-electric/40 transition-all duration-300">
+                    <!-- Regulatory cryptocurrency news -->
+                    <img src="https://images.unsplash.com/photo-1559526324-593bc073d938?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400" alt="Government building representing crypto regulation" class="w-full h-48 object-cover rounded-xl mb-4" />
+                    <div class="flex items-center space-x-2 mb-3">
+                        <span class="px-3 py-1 bg-amber/20 text-amber rounded-full text-sm">Neutral</span>
+                        <span class="text-cool-gray text-sm">6 hours ago</span>
+                    </div>
+                    <h3 class="font-grotesk font-semibold text-lg mb-3">New Crypto Regulations Proposed for Enhanced Consumer Protection</h3>
+                    <p class="text-cool-gray mb-4">Government officials announce new framework aimed at protecting retail investors while maintaining innovation in the cryptocurrency space.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-cool-gray text-sm">Reuters</span>
+                        <button class="text-electric hover:text-neon transition-colors">
+                            <i class="fas fa-external-link-alt"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-electric/20 hover:border-electric/40 transition-all duration-300">
+                    <!-- DeFi cryptocurrency market news -->
+                    <img src="https://images.unsplash.com/photo-1621761191319-c6fb62004040?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400" alt="Decentralized finance DeFi concept visualization" class="w-full h-48 object-cover rounded-xl mb-4" />
+                    <div class="flex items-center space-x-2 mb-3">
+                        <span class="px-3 py-1 bg-emerald/20 text-emerald rounded-full text-sm">Positive</span>
+                        <span class="text-cool-gray text-sm">8 hours ago</span>
+                    </div>
+                    <h3 class="font-grotesk font-semibold text-lg mb-3">DeFi Protocol Launches Revolutionary Yield Farming Strategy</h3>
+                    <p class="text-cool-gray mb-4">A new decentralized finance protocol introduces innovative yield farming mechanisms that could reshape how users earn passive income in crypto.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-cool-gray text-sm">DeFi Pulse</span>
+                        <button class="text-electric hover:text-neon transition-colors">
+                            <i class="fas fa-external-link-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Social Sentiment -->
+            <div class="mt-8">
+                <div class="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-electric/20">
+                    <h3 class="font-grotesk font-semibold text-xl mb-6">Social Media Sentiment</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <h4 class="font-medium text-electric">Top Trending Topics</h4>
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                                    <span>#Bitcoin</span>
+                                    <div class="flex items-center space-x-2">
+                                        <div class="w-2 h-2 bg-emerald rounded-full"></div>
+                                        <span class="text-emerald text-sm">+34.2K</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                                    <span>#Ethereum</span>
+                                    <div class="flex items-center space-x-2">
+                                        <div class="w-2 h-2 bg-emerald rounded-full"></div>
+                                        <span class="text-emerald text-sm">+18.7K</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                                    <span>#DeFi</span>
+                                    <div class="flex items-center space-x-2">
+                                        <div class="w-2 h-2 bg-amber rounded-full"></div>
+                                        <span class="text-amber text-sm">+9.3K</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <h4 class="font-medium text-electric">Recent Mentions</h4>
+                            <div class="space-y-3">
+                                <div class="p-3 bg-white/5 rounded-lg">
+                                    <div class="flex items-center space-x-2 mb-2">
+                                        <span class="text-cool-gray text-sm">@CryptoAnalyst</span>
+                                        <span class="px-2 py-1 bg-emerald/20 text-emerald text-xs rounded">Positive</span>
+                                    </div>
+                                    <p class="text-sm">"Bitcoin's technical indicators are looking incredibly strong right now. This could be the start of another major bull run! 🚀"</p>
+                                </div>
+                                <div class="p-3 bg-white/5 rounded-lg">
+                                    <div class="flex items-center space-x-2 mb-2">
+                                        <span class="text-cool-gray text-sm">@DeFiTrader</span>
+                                        <span class="px-2 py-1 bg-emerald/20 text-emerald text-xs rounded">Positive</span>
+                                    </div>
+                                    <p class="text-sm">"Ethereum's network activity is through the roof. The ecosystem is thriving! 💎"</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Page -->
+    <div id="history-page" class="page-content pt-20 hidden">
+        <div class="max-w-4xl mx-auto px-6 py-8">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h1 class="font-grotesk font-bold text-3xl mb-2">Chat History</h1>
+                    <p class="text-cool-gray">Your previous conversations with the AI assistant</p>
+                </div>
+                <button class="px-4 py-2 bg-red-500/20 text-red-400 rounded-xl hover:bg-red-500/30 transition-colors">
+                    <i class="fas fa-trash mr-2"></i>
+                    Clear History
+                </button>
+            </div>
+
+            <!-- Search and Filter -->
+            <div class="mb-6">
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <div class="flex-1">
+                        <input 
+                            type="text" 
+                            placeholder="Search conversations..."
+                            class="w-full bg-white/5 border border-electric/30 rounded-xl px-4 py-3 focus:outline-none focus:border-electric transition-colors"
+                        >
+                    </div>
+                    <select class="bg-white/5 border border-electric/30 rounded-xl px-4 py-3 focus:outline-none focus:border-electric">
+                        <option>All Topics</option>
+                        <option>Market Analysis</option>
+                        <option>News & Sentiment</option>
+                        <option>Trading Questions</option>
+                        <option>Educational</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Conversation History -->
+            <div class="space-y-6">
+                <div class="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-electric/20 hover:border-electric/40 transition-all duration-300 cursor-pointer">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-emerald/20 rounded-full flex items-center justify-center">
+                                <i class="fas fa-chart-line text-emerald text-sm"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-medium">Bitcoin Price Analysis</h3>
+                                <p class="text-cool-gray text-sm">Today, 2:30 PM</p>
+                            </div>
+                        </div>
+                        <span class="px-3 py-1 bg-emerald/20 text-emerald rounded-full text-sm">Market Analysis</span>
+                    </div>
+                    <p class="text-cool-gray mb-3">You asked about Bitcoin's price movements and received detailed analysis about market trends, institutional adoption, and technical indicators.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-cool-gray text-sm">12 messages</span>
+                        <i class="fas fa-chevron-right text-electric"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-electric/20 hover:border-electric/40 transition-all duration-300 cursor-pointer">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-neon/20 rounded-full flex items-center justify-center">
+                                <i class="fas fa-newspaper text-neon text-sm"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-medium">DeFi News Discussion</h3>
+                                <p class="text-cool-gray text-sm">Yesterday, 4:15 PM</p>
+                            </div>
+                        </div>
+                        <span class="px-3 py-1 bg-neon/20 text-neon rounded-full text-sm">News & Sentiment</span>
+                    </div>
+                    <p class="text-cool-gray mb-3">Conversation about the latest DeFi developments, yield farming strategies, and market sentiment analysis from recent news articles.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-cool-gray text-sm">8 messages</span>
+                        <i class="fas fa-chevron-right text-electric"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-electric/20 hover:border-electric/40 transition-all duration-300 cursor-pointer">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-amber/20 rounded-full flex items-center justify-center">
+                                <i class="fas fa-graduation-cap text-amber text-sm"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-medium">Trading Basics Explained</h3>
+                                <p class="text-cool-gray text-sm">2 days ago, 1:45 PM</p>
+                            </div>
+                        </div>
+                        <span class="px-3 py-1 bg-amber/20 text-amber rounded-full text-sm">Educational</span>
+                    </div>
+                    <p class="text-cool-gray mb-3">Educational discussion about fundamental trading concepts, risk management, and beginner-friendly strategies for cryptocurrency markets.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-cool-gray text-sm">15 messages</span>
+                        <i class="fas fa-chevron-right text-electric"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-electric/20 hover:border-electric/40 transition-all duration-300 cursor-pointer">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-electric/20 rounded-full flex items-center justify-center">
+                                <i class="fas fa-question-circle text-electric text-sm"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-medium">Altcoin Questions</h3>
+                                <p class="text-cool-gray text-sm">3 days ago, 10:20 AM</p>
+                            </div>
+                        </div>
+                        <span class="px-3 py-1 bg-electric/20 text-electric rounded-full text-sm">Trading Questions</span>
+                    </div>
+                    <p class="text-cool-gray mb-3">Questions about various altcoins, their use cases, market potential, and how they compare to major cryptocurrencies like Bitcoin and Ethereum.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-cool-gray text-sm">6 messages</span>
+                        <i class="fas fa-chevron-right text-electric"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="flex justify-center mt-8">
+                <div class="flex items-center space-x-2">
+                    <button class="px-3 py-2 text-cool-gray hover:text-electric transition-colors">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button class="px-4 py-2 bg-electric text-white rounded-lg">1</button>
+                    <button class="px-4 py-2 text-cool-gray hover:text-electric transition-colors">2</button>
+                    <button class="px-4 py-2 text-cool-gray hover:text-electric transition-colors">3</button>
+                    <button class="px-3 py-2 text-cool-gray hover:text-electric transition-colors">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Page navigation
+        function showPage(pageId) {
+            // Hide all pages
+            const pages = document.querySelectorAll('.page-content');
+            pages.forEach(page => page.classList.add('hidden'));
+            
+            // Show selected page
+            document.getElementById(pageId + '-page').classList.remove('hidden');
+            
+            // Update navigation
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => link.classList.remove('text-electric'));
+            navLinks.forEach(link => link.classList.add('text-off-white/80'));
+            
+            // Highlight current nav item
+            event.target.classList.remove('text-off-white/80');
+            event.target.classList.add('text-electric');
+            
+            // Initialize chart if market page
+            if (pageId === 'market') {
+                setTimeout(initChart, 100);
+            }
+        }
+
+        // Initialize Bitcoin price chart
+        function initChart() {
+            const ctx = document.getElementById('priceChart');
+            if (!ctx || ctx.chart) return;
+            
+            const chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '24:00'],
+                    datasets: [{
+                        label: 'Bitcoin Price',
+                        data: [42100, 42800, 43200, 43500, 43247, 43800, 43247],
+                        borderColor: '#1F8EF1',
+                        backgroundColor: 'rgba(31, 142, 241, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: 'rgba(31, 142, 241, 0.1)'
+                            },
+                            ticks: {
+                                color: '#9AA0A6'
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: 'rgba(31, 142, 241, 0.1)'
+                            },
+                            ticks: {
+                                color: '#9AA0A6',
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            ctx.chart = chart;
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show home page by default
+            showPage('home');
+        });
+
+        // TODO: Implement business logic, API calls, and state management
+        // TODO: Add real-time data updates
+        // TODO: Implement localStorage for chat history
+        // TODO: Add form validation and error handling
+        // TODO: Connect to backend API endpoints
+        // TODO: Add loading states and animations
+    </script>
+</body>
+</html>

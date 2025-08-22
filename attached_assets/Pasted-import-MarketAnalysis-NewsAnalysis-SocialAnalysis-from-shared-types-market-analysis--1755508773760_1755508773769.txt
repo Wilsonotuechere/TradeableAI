@@ -1,0 +1,184 @@
+import {
+  MarketAnalysis,
+  NewsAnalysis,
+  SocialAnalysis,
+} from "@shared/types/market-analysis";
+import { env } from "../config/env";
+
+// Initialize Gemini API configuration
+const GEMINI_CONFIG = {
+  apiKey: env.GEMINI_API_KEY,
+  baseUrl: "https://generativelanguage.googleapis.com/v1/models",
+  model: "gemini-2.0-flash",
+  defaultParams: {
+    temperature: 0.7,
+    topP: 0.8,
+    topK: 40,
+    maxOutputTokens: 2048,
+  },
+} as const;
+
+export const GEMINI_SYSTEM_ROLE = `You are Tradeable's AI Market Analyst, powered by Google's Gemini. Your role is to:
+
+1. Analyze crypto market data and provide clear, actionable insights
+2. Break down complex market concepts into beginner-friendly explanations
+3. Combine technical analysis with sentiment data for comprehensive market views
+4. Maintain a balanced, educational tone without making direct price predictions
+
+Key Responsibilities:
+- Explain technical indicators in plain language
+- Interpret market sentiment and social trends
+- Highlight potential risks and opportunities
+- Provide context for market movements
+- Always include educational elements in responses
+
+Style Guidelines:
+- Use clear, concise language
+- Break down complex terms
+- Include relevant market context
+- Balance technical and fundamental analysis
+- Always add risk disclaimers`;
+
+export function generateMarketAnalysisPrompt(data: {
+  coin: MarketAnalysis["coin"];
+  technicalAnalysis: any;
+  newsSentiment: NewsAnalysis;
+  socialSentiment: SocialAnalysis;
+}): string {
+  const config = GEMINI_CONFIG;
+
+  // Validate API key availability
+  if (!config.apiKey) {
+    throw new Error(
+      "GEMINI_API_KEY is not configured in environment variables"
+    );
+  }
+
+  return `${GEMINI_SYSTEM_ROLE}
+
+📊 MARKET ANALYSIS REQUEST FOR ${data.coin.name} (${data.coin.symbol})
+
+Current Market Snapshot:
+• Price: $${data.coin.price.toLocaleString()}
+• 24h Change: ${data.coin.priceChange24h.toFixed(2)}%
+• Volume: $${data.coin.volume24h.toLocaleString()}
+• Market Cap: $${data.coin.marketCap.toLocaleString()}
+
+Technical Indicators:
+• RSI (14): ${data.technicalAnalysis.rsi.toFixed(2)} - ${interpretRSI(
+    data.technicalAnalysis.rsi
+  )}
+• MACD: ${interpretMACD(data.technicalAnalysis.macd)}
+• Moving Averages: ${formatMovingAverages(
+    data.technicalAnalysis.movingAverages,
+    data.coin.price
+  )}
+
+Market Sentiment:
+• News Sentiment: ${formatSentiment(data.newsSentiment.overallSentiment)}
+• Social Sentiment: ${formatSentiment(data.socialSentiment.overallSentiment)}
+• Trending Topics: ${formatTrending(data.socialSentiment.trending)}
+
+Please provide a comprehensive analysis with the following sections:
+
+1. 📈 TECHNICAL OVERVIEW
+Analyze current price action, technical indicators, and potential trend directions.
+Focus on explaining what these indicators mean for beginners.
+
+2. 💰 MARKET POSITION
+Evaluate ${
+    data.coin.symbol
+  }'s market standing, volume trends, and relative strength.
+Explain how these factors affect the asset's stability and liquidity.
+
+3. 👥 MARKET SENTIMENT
+Interpret news and social sentiment data.
+Explain how market perception might influence price action.
+
+4. 🔍 BEGINNER'S SUMMARY
+Provide a plain-English explanation of all the above.
+Include basic trading concepts and risk considerations.
+
+Requirements:
+- Keep explanations beginner-friendly
+- Define any technical terms used
+- Highlight key points to watch
+- Include risk warnings
+- No direct price predictions
+- Focus on educational value
+
+Format the response in clear sections with emojis and bullet points for readability.`;
+}
+
+export function generateMarketEducationPrompt(
+  topic: string,
+  context: any
+): string {
+  return `As Tradeable's AI Market Educator, explain ${topic} in crypto trading.
+
+Context:
+${JSON.stringify(context, null, 2)}
+
+Provide:
+1. 📚 Basic Definition
+   - What is it?
+   - Why is it important?
+
+2. 🎓 How It Works
+   - Simple explanation
+   - Real-world examples
+
+3. 📊 Market Application
+   - How traders use it
+   - Common patterns
+
+4. 🔰 Beginner Tips
+   - Key things to watch
+   - Common mistakes
+   - Risk considerations
+
+5. 🎯 Practice Suggestions
+   - How to start using this knowledge
+   - Tools or resources to learn more
+
+Format the response with:
+- Clear headings
+- Bullet points
+- Simple examples
+- Practical tips
+- Risk warnings`;
+}
+
+// Helper Functions
+function interpretRSI(rsi: number): string {
+  if (rsi > 70) return "Potentially overbought";
+  if (rsi < 30) return "Potentially oversold";
+  return "Neutral territory";
+}
+
+function interpretMACD(macd: any): string {
+  const trend = macd.value > macd.signal ? "bullish" : "bearish";
+  const strength = Math.abs(macd.histogram);
+  return `${trend} momentum (${strength > 0.5 ? "strong" : "moderate"} signal)`;
+}
+
+function formatMovingAverages(ma: any, price: number): string {
+  const trends = [];
+  if (price > ma.sma20) trends.push("above 20-day MA");
+  if (price > ma.sma50) trends.push("above 50-day MA");
+  if (price > ma.sma200) trends.push("above 200-day MA");
+  return trends.join(", ") || "below major moving averages";
+}
+
+function formatSentiment(sentiment: any): string {
+  return `${sentiment.label} (${(sentiment.confidence * 100).toFixed(
+    1
+  )}% confidence)`;
+}
+
+function formatTrending(trending: any[]): string {
+  return trending
+    .slice(0, 3)
+    .map((t) => `${t.topic} (${t.mentions} mentions)`)
+    .join(", ");
+}

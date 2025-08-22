@@ -1,0 +1,205 @@
+import { MarketSentiment } from "@shared/types/market-analysis";
+import { env } from "../config/env";
+
+// Initialize HuggingFace API configuration
+const HUGGINGFACE_CONFIG = {
+  apiKey: env.HUGGINGFACE_API_KEY,
+  baseUrl: "https://api-inference.huggingface.co/models",
+  models: {
+    sentiment: "finiteautomata/bertweet-base-sentiment-analysis",
+    finbert: "yiyanghkust/finbert-tone",
+  },
+} as const;
+
+export const HUGGINGFACE_SYSTEM_ROLE = `You are Tradeable's Sentiment Analysis Engine, powered by FinBERT. Your role is to:
+
+1. Analyze financial text for market sentiment
+2. Detect emotional undertones in market discussions
+3. Identify key topics and trends
+4. Provide confidence scores for sentiment predictions
+5. Flag potential market-moving narratives
+
+Analysis Requirements:
+- Focus on financial context
+- Consider market impact
+- Maintain consistency
+- Flag extreme sentiments
+- Identify emerging trends`;
+
+export function generateNewsSentimentPrompt(
+  articles: Array<{ title: string; content: string }>
+): string {
+  const config = HUGGINGFACE_CONFIG;
+
+  // Validate API key availability
+  if (!config.apiKey) {
+    throw new Error(
+      "HUGGINGFACE_API_KEY is not configured in environment variables"
+    );
+  }
+
+  return `${HUGGINGFACE_SYSTEM_ROLE}
+
+Analyze the following crypto market news articles for sentiment. Consider market impact and overall narrative.
+
+Articles to analyze:
+${articles
+  .map(
+    (article, i) => `
+Article ${i + 1}:
+Title: ${article.title}
+Content: ${article.content}
+`
+  )
+  .join("\n\n")}
+
+For each article, determine:
+1. Primary Sentiment
+   - Positive/Negative/Neutral classification
+   - Confidence score (0-1)
+   - Key sentiment drivers
+
+2. Market Impact Assessment
+   - Potential price influence
+   - Timeline (immediate/short-term/long-term)
+   - Impact confidence level
+
+3. Topic Analysis
+   - Main themes
+   - Related market sectors
+   - Geographic focus
+
+Provide sentiment scores in the format:
+{
+  "sentiment": "positive|negative|neutral",
+  "confidence": 0.XX,
+  "impact": "high|medium|low"
+}`;
+}
+
+export function generateSocialSentimentPrompt(data: {
+  tweets: string[];
+  topics: string[];
+  timeframe: string;
+}): string {
+  return `${HUGGINGFACE_SYSTEM_ROLE}
+
+Analyze the following social media content for crypto market sentiment:
+
+Timeframe: ${data.timeframe}
+
+Trending Topics:
+${data.topics.map((topic, i) => `${i + 1}. ${topic}`).join("\n")}
+
+Social Posts:
+${data.tweets.map((tweet, i) => `[${i + 1}] ${tweet}`).join("\n\n")}
+
+Provide:
+1. Individual Post Analysis
+   - Sentiment classification per post
+   - Confidence scores
+   - Key phrases driving sentiment
+
+2. Topic Sentiment
+   - Sentiment per trending topic
+   - Volume of discussion
+   - Sentiment shift detection
+
+3. Overall Market Mood
+   - Aggregate sentiment score
+   - Confidence level
+   - Notable sentiment patterns
+
+4. Trend Analysis
+   - Emerging narratives
+   - Sentiment shifts
+   - Potential market catalysts
+
+Return structured data in the format:
+{
+  "overallSentiment": {
+    "label": "positive|negative|neutral",
+    "score": 0.XX,
+    "confidence": 0.XX
+  },
+  "topicSentiments": [{
+    "topic": "string",
+    "sentiment": "positive|negative|neutral",
+    "volume": number,
+    "trend": "rising|stable|falling"
+  }]
+}`;
+}
+
+export function generateVolumeSentimentPrompt(volumeData: {
+  current: number;
+  average: number;
+  spikes: number[];
+}): string {
+  return `${HUGGINGFACE_SYSTEM_ROLE}
+
+Analyze trading volume patterns for sentiment signals:
+
+Volume Data:
+• Current: ${volumeData.current.toLocaleString()}
+• 24h Average: ${volumeData.average.toLocaleString()}
+• Recent Spikes: ${volumeData.spikes.join(", ")}
+
+Determine:
+1. Volume Sentiment
+   - Is current volume showing bullish or bearish pressure?
+   - How does this compare to recent averages?
+   - Are there notable volume patterns?
+
+2. Trading Activity
+   - Institutional vs retail patterns
+   - Accumulation vs distribution signals
+   - Unusual volume events
+
+3. Market Impact
+   - Potential price influence
+   - Sustainability of current volume
+   - Risk considerations
+
+Provide analysis in the format:
+{
+  "volumeSentiment": "bullish|bearish|neutral",
+  "confidence": 0.XX,
+  "patterns": ["pattern1", "pattern2"],
+  "alerts": ["alert1", "alert2"]
+}`;
+}
+
+// Helper functions for sentiment analysis
+export function calculateCompositeSentiment(
+  sentiments: MarketSentiment[]
+): MarketSentiment {
+  if (!sentiments.length) {
+    return { label: "neutral", score: 0.5, confidence: 0 };
+  }
+
+  const weightedScores = sentiments.reduce(
+    (acc, s) => acc + s.score * s.confidence,
+    0
+  );
+  const totalConfidence = sentiments.reduce((acc, s) => acc + s.confidence, 0);
+  const avgScore = weightedScores / (totalConfidence || 1);
+
+  return {
+    label:
+      avgScore > 0.6 ? "positive" : avgScore < 0.4 ? "negative" : "neutral",
+    score: avgScore,
+    confidence: totalConfidence / sentiments.length,
+  };
+}
+
+export function detectSentimentShift(
+  previous: MarketSentiment,
+  current: MarketSentiment
+): "rising" | "falling" | "stable" {
+  const threshold = 0.15;
+  const change = current.score - previous.score;
+
+  if (Math.abs(change) < threshold) return "stable";
+  return change > 0 ? "rising" : "falling";
+}

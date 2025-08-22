@@ -1,0 +1,89 @@
+import React from 'react';
+import { formatDistanceToNow } from 'date-fns';
+import GlassCard from '@/components/ui/glass-card';
+import { Badge } from '@/components/ui/badge';
+import { Clock } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+
+interface NewsArticle {
+  id: string;
+  title: string;
+  content: string;
+  source: string;
+  publishedAt: string;
+  url: string;
+  urlToImage: string;
+  sourceName: string;
+}
+
+interface NewsGridProps {
+  articles: NewsArticle[];
+  loading?: boolean;
+}
+
+export default function NewsSection({ articles, loading = false }: NewsGridProps) {
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[1, 2, 3, 4, 5, 6].map((skeleton) => (
+          <GlassCard key={`skeleton-${skeleton}`} className="p-0 overflow-hidden">
+            <div className="animate-pulse">
+              <div className="h-48 bg-white/10" />
+              <div className="p-6 space-y-4">
+                <div className="h-6 bg-white/10 rounded" />
+                <div className="space-y-2">
+                  <div className="h-4 bg-white/10 rounded w-3/4" />
+                  <div className="h-4 bg-white/10 rounded w-1/2" />
+                </div>
+              </div>
+            </div>
+          </GlassCard>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {articles.map((article) => (
+        <a
+          key={article.id}
+          href={article.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block group"
+        >
+          <GlassCard className="p-0 overflow-hidden transition-transform duration-200 hover:scale-[1.02]">
+            <div 
+              className="h-48 bg-cover bg-center" 
+              style={{ 
+                backgroundImage: `url(${article.urlToImage || '/images/default-news-image.jpg'})`
+              }}
+            />
+            <div className="p-6 space-y-4">
+              <h3 className="font-grotesk font-semibold text-lg text-white group-hover:text-electric transition-colors">
+                {article.title}
+              </h3>
+              
+              <p className="text-cool-gray line-clamp-3">
+                {article.content}
+              </p>
+
+              <Separator className="bg-white/10" />
+              
+              <div className="flex items-center justify-between">
+                <Badge variant="outline" className="text-cool-gray border-cool-gray/30">
+                  {article.sourceName}
+                </Badge>
+                <div className="flex items-center text-cool-gray/70 text-sm">
+                  <Clock className="h-3 w-3 mr-1" />
+                  {formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true })}
+                </div>
+              </div>
+            </div>
+          </GlassCard>
+        </a>
+      ))}
+    </div>
+  );
+}

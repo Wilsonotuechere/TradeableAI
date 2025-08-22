@@ -1,0 +1,105 @@
+"use client"
+
+import { Layout } from "@/components/Layout"
+import { HistoryList } from "@/components/HistoryList"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { useTradeable } from "@/contexts/TradeableContext"
+import { History, Download, Trash2 } from "lucide-react"
+
+export default function HistoryPage() {
+  const { state, dispatch } = useTradeable()
+
+  const exportHistory = () => {
+    const dataStr = JSON.stringify(state.chatHistory, null, 2)
+    const dataBlob = new Blob([dataStr], { type: "application/json" })
+    const url = URL.createObjectURL(dataBlob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = `tradeable-history-${new Date().toISOString().split("T")[0]}.json`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const clearHistory = () => {
+    if (confirm("Are you sure you want to clear all chat history? This cannot be undone.")) {
+      dispatch({ type: "CLEAR_CHAT_HISTORY" })
+    }
+  }
+
+  return (
+    <Layout>
+      <div className="p-6 max-w-4xl mx-auto">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <History className="h-6 w-6 text-primary" />
+            <div>
+              <h1 className="text-2xl font-serif font-bold">Chat History</h1>
+              <p className="text-muted-foreground">Review your previous conversations with the AI assistant</p>
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            {state.chatHistory.length > 0 && (
+              <>
+                <Button variant="outline" size="sm" onClick={exportHistory}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Export
+                </Button>
+                <Button variant="destructive" size="sm" onClick={clearHistory}>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Clear All
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+
+        {state.chatHistory.length === 0 ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-center">No Chat History</CardTitle>
+            </CardHeader>
+            <CardContent className="text-center">
+              <p className="text-muted-foreground mb-4">
+                Start a conversation with the AI assistant to see your history here.
+              </p>
+              <Button asChild>
+                <a href="/chat">Start Chatting</a>
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="text-2xl font-bold text-primary">{state.chatHistory.length}</div>
+                  <div className="text-sm text-muted-foreground">Total Messages</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="text-2xl font-bold text-chart-4">
+                    {state.chatHistory.filter((m) => m.type === "ai").length}
+                  </div>
+                  <div className="text-sm text-muted-foreground">AI Responses</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="text-2xl font-bold text-chart-2">
+                    {state.chatHistory.filter((m) => m.intent === "MARKET").length}
+                  </div>
+                  <div className="text-sm text-muted-foreground">Market Queries</div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <HistoryList />
+          </div>
+        )}
+      </div>
+    </Layout>
+  )
+}
