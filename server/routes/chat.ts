@@ -8,7 +8,7 @@ import {
 import { determineMessageIntent } from "../utils/message-intent";
 import { randomUUID } from "crypto";
 import { storage } from "../storage";
-import binanceClient from "../services/binance-service";
+import { binanceClient } from "../services/binance-service";
 import newsClient from "../services/news-service";
 import { twitterService } from "../services/twitter-service";
 import { callGeminiAPI, generateChatPrompt } from "../services/gemini-service";

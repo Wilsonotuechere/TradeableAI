@@ -14,10 +14,21 @@ export interface BinanceMarketStats {
   btcDominance: string;
 }
 
+const BINANCE_ENDPOINTS = [
+  "https://api.binance.com",
+  "https://api1.binance.com",
+  "https://api2.binance.com",
+  "https://api3.binance.com",
+  "https://data-api.binance.vision",
+];
+
 class BinanceService {
   private apiKey: string;
   private apiSecret: string;
   private baseUrl: string;
+  private currentEndpointIndex = 0;
+  private retryCount = 0;
+  private maxRetries = 3;
 
   constructor() {
     this.apiKey = process.env.BINANCE_API_KEY || "";
@@ -37,53 +48,70 @@ class BinanceService {
     params: Record<string, any> = {}
   ): Promise<any> {
     try {
-      // For public endpoints like /api/v3/ticker/24hr, we don't need signature
-      const isPublicEndpoint =
-        endpoint.includes("/ticker/") || endpoint.includes("/exchangeInfo");
-      let url: string;
+      const isPublicEndpoint = endpoint.includes("/ticker/") || endpoint.includes("/exchangeInfo");
 
-      if (isPublicEndpoint) {
-        const queryString = new URLSearchParams(params).toString();
-        url = `${this.baseUrl}${endpoint}${
-          queryString ? "?" + queryString : ""
-        }`;
-      } else {
-        // For authenticated endpoints
-        const timestamp = Date.now();
-        const queryString = new URLSearchParams({
-          ...params,
-          timestamp: timestamp.toString(),
-        }).toString();
+      // Try different endpoints if the current one fails
+      while (this.retryCount < this.maxRetries) {
+        try {
+          const baseUrl = BINANCE_ENDPOINTS[this.currentEndpointIndex];
+          let url: string;
 
-        const signature = this.createSignature(queryString);
-        url = `${this.baseUrl}${endpoint}?${queryString}&signature=${signature}`;
+          if (isPublicEndpoint) {
+            const queryString = new URLSearchParams(params).toString();
+            url = `${baseUrl}${endpoint}${queryString ? "?" + queryString : ""}`;
+          } else {
+            const timestamp = Date.now();
+            const queryString = new URLSearchParams({
+              ...params,
+              timestamp: timestamp.toString(),
+            }).toString();
+
+            const signature = this.createSignature(queryString);
+            url = `${baseUrl}${endpoint}?${queryString}&signature=${signature}`;
+          }
+
+          const headers: Record<string, string> = {
+            "Accept": "application/json",
+            "User-Agent": "TradeableAI/1.0",
+          };
+
+          if (!isPublicEndpoint) {
+            headers["X-MBX-APIKEY"] = this.apiKey;
+          }
+
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 5000);
+
+          const response = await fetch(url, {
+            headers,
+            signal: controller.signal
+          });
+
+          clearTimeout(timeout);
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`${response.status} ${response.statusText} - ${errorText}`);
+          }
+
+          this.retryCount = 0; // Reset retry count on success
+          return await response.json();
+
+        } catch (error) {
+          this.currentEndpointIndex = (this.currentEndpointIndex + 1) % BINANCE_ENDPOINTS.length;
+          this.retryCount++;
+
+          if (this.retryCount >= this.maxRetries) {
+            throw error;
+          }
+
+          console.log(`Trying Binance endpoint: ${BINANCE_ENDPOINTS[this.currentEndpointIndex]}`);
+          await new Promise(resolve => setTimeout(resolve, 1000 * this.retryCount));
+        }
       }
 
-      const headers: Record<string, string> = {
-        Accept: "application/json",
-        "User-Agent": "TradeableAI/1.0",
-      };
+      throw new Error("All Binance endpoints failed");
 
-      // Only add API key for authenticated endpoints
-      if (!isPublicEndpoint) {
-        headers["X-MBX-APIKEY"] = this.apiKey;
-      }
-
-      const response = await fetch(url, { headers });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Binance API Error Response:", {
-          status: response.status,
-          statusText: response.statusText,
-          errorBody: errorText,
-        });
-        throw new Error(
-          `Binance API error: ${response.status} ${response.statusText} - ${errorText}`
-        );
-      }
-
-      return await response.json();
     } catch (error) {
       console.error("Binance API request failed:", {
         endpoint,
@@ -260,4 +288,6 @@ class BinanceService {
   }
 }
 
-export default new BinanceService();
+// Export both the instance and the class
+export const binanceClient = new BinanceService();
+export default binanceClient;
