@@ -1,6 +1,10 @@
 import crypto from "crypto";
 
 export interface BinanceTickerData {
+  quoteAssetVolume(quoteAssetVolume: any): number;
+  highPrice(highPrice: any): number;
+  lowPrice(lowPrice: any): number;
+  priceChange(priceChange: any): number;
   symbol: string;
   price: string;
   priceChangePercent: string;
@@ -48,7 +52,8 @@ class BinanceService {
     params: Record<string, any> = {}
   ): Promise<any> {
     try {
-      const isPublicEndpoint = endpoint.includes("/ticker/") || endpoint.includes("/exchangeInfo");
+      const isPublicEndpoint =
+        endpoint.includes("/ticker/") || endpoint.includes("/exchangeInfo");
 
       // Try different endpoints if the current one fails
       while (this.retryCount < this.maxRetries) {
@@ -58,7 +63,9 @@ class BinanceService {
 
           if (isPublicEndpoint) {
             const queryString = new URLSearchParams(params).toString();
-            url = `${baseUrl}${endpoint}${queryString ? "?" + queryString : ""}`;
+            url = `${baseUrl}${endpoint}${
+              queryString ? "?" + queryString : ""
+            }`;
           } else {
             const timestamp = Date.now();
             const queryString = new URLSearchParams({
@@ -71,7 +78,7 @@ class BinanceService {
           }
 
           const headers: Record<string, string> = {
-            "Accept": "application/json",
+            Accept: "application/json",
             "User-Agent": "TradeableAI/1.0",
           };
 
@@ -84,34 +91,41 @@ class BinanceService {
 
           const response = await fetch(url, {
             headers,
-            signal: controller.signal
+            signal: controller.signal,
           });
 
           clearTimeout(timeout);
 
           if (!response.ok) {
             const errorText = await response.text();
-            throw new Error(`${response.status} ${response.statusText} - ${errorText}`);
+            throw new Error(
+              `${response.status} ${response.statusText} - ${errorText}`
+            );
           }
 
           this.retryCount = 0; // Reset retry count on success
           return await response.json();
-
         } catch (error) {
-          this.currentEndpointIndex = (this.currentEndpointIndex + 1) % BINANCE_ENDPOINTS.length;
+          this.currentEndpointIndex =
+            (this.currentEndpointIndex + 1) % BINANCE_ENDPOINTS.length;
           this.retryCount++;
 
           if (this.retryCount >= this.maxRetries) {
             throw error;
           }
 
-          console.log(`Trying Binance endpoint: ${BINANCE_ENDPOINTS[this.currentEndpointIndex]}`);
-          await new Promise(resolve => setTimeout(resolve, 1000 * this.retryCount));
+          console.log(
+            `Trying Binance endpoint: ${
+              BINANCE_ENDPOINTS[this.currentEndpointIndex]
+            }`
+          );
+          await new Promise((resolve) =>
+            setTimeout(resolve, 1000 * this.retryCount)
+          );
         }
       }
 
       throw new Error("All Binance endpoints failed");
-
     } catch (error) {
       console.error("Binance API request failed:", {
         endpoint,
@@ -285,6 +299,25 @@ class BinanceService {
 
   async getMarketData(): Promise<any[]> {
     return this.getTopCryptocurrencies();
+  }
+
+  async getDepth(
+    symbol: string,
+    limit: number = 100
+  ): Promise<{
+    lastUpdateId: number;
+    bids: [string, string][];
+    asks: [string, string][];
+  }> {
+    try {
+      console.log("Fetching order book depth from Binance...");
+      const params = { symbol, limit };
+      const data = await this.makeRequest("/api/v3/depth", params);
+      return data;
+    } catch (error) {
+      console.error("Failed to fetch Binance depth data:", error);
+      throw new Error("Unable to fetch order book data from Binance");
+    }
   }
 }
 

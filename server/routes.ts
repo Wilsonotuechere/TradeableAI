@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { insertChatHistorySchema, ChatMessage } from "@shared/schema";
 import newsRoutes from "./routes/news";
 import chatRoutes from "./routes/chat";
+import marketRoutes from "./routes/market";
 
 // Simple in-memory cache
 class SimpleCache {
@@ -125,7 +126,6 @@ function generateSampleCandles(
 
   return candles;
 }
-import { analyzeSentimentWithHuggingFace } from "./services/huggingface-service";
 import { investmentAnalysisService } from "./services/investment-analysis-service";
 
 // Error handling class for API errors
@@ -791,6 +791,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Mount API routes
   app.use("/api", newsRoutes);
   app.use("/api/chat", chatRoutes);
+  app.use("/api/market", marketRoutes);
 
   // Register error handling middleware last
   app.use(errorHandler);

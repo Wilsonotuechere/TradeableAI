@@ -10,14 +10,21 @@ import {
 
 // Custom error class for market analysis
 export class MarketAnalysisError extends Error {
+  public errorCode: string;
+  public statusCode: number;
+  public details?: unknown;
+
   constructor(
     message: string,
-    public code: string,
-    public statusCode: number = 500,
-    public details?: unknown
+    errorCode: string,
+    statusCode: number = 500,
+    details?: unknown
   ) {
     super(message);
     this.name = "MarketAnalysisError";
+    this.errorCode = errorCode;
+    this.statusCode = statusCode;
+    this.details = details;
   }
 }
 
@@ -60,23 +67,25 @@ interface MarketAnalysis {
   coin: {
     symbol: string;
     name: string;
+    price: number;
+    priceChange24h: number;
+    volume24h: number;
+    marketCap: number;
   };
-  price: {
-    current: number;
-    change24h: number;
-    percentChange24h: number;
+  technicalAnalysis: {
+    rsi: number;
+    macd: {
+      value: number;
+      signal: number;
+      histogram: number;
+    };
+    movingAverages: {
+      sma20: number;
+      sma50: number;
+      sma200: number;
+    };
   };
-  sentiment: {
-    overall: string;
-    confidence: number;
-    breakdown: any;
-  };
-  news: NewsArticle[];
-  technical: {
-    support: number;
-    resistance: number;
-    trend: string;
-  };
+  aiAnalysis: string;
   timestamp: string;
 }
 
@@ -195,7 +204,9 @@ export async function getBinanceMarketData(
     if (isBinanceError(error)) {
       throw new MarketAnalysisError(
         `Failed to fetch market data for ${symbol}: ${error.message}`,
-        error.code
+        "BINANCE_ERROR",
+        500,
+        { binanceCode: error.code }
       );
     }
     throw new MarketAnalysisError(
@@ -407,8 +418,47 @@ Trading Considerations:
 Always conduct your own research and consider multiple factors before making trading decisions.`;
 }
 
-export async function generateMarketAnalysis(coinInfo: any): Promise<any> {
+export async function generateMarketAnalysis(coinInfo: {
+  symbol: string;
+  name: string;
+  price: string;
+  priceChangePercent24h: string;
+  volume24h: string;
+  marketCap: string;
+}): Promise<{
+  coin: {
+    symbol: string;
+    name: string;
+    price: number;
+    priceChange24h: number;
+    volume24h: number;
+    marketCap: number;
+  };
+  technicalAnalysis: {
+    rsi: number;
+    macd: {
+      value: number;
+      signal: number;
+      histogram: number;
+    };
+    movingAverages: {
+      sma20: number;
+      sma50: number;
+      sma200: number;
+    };
+  };
+  aiAnalysis: string;
+  timestamp: string;
+}> {
   try {
+    if (!coinInfo?.symbol) {
+      throw new MarketAnalysisError(
+        "Invalid coin info: symbol is required",
+        "INVALID_COIN",
+        400
+      );
+    }
+
     console.log(`Generating market analysis for ${coinInfo.symbol}...`);
 
     // Get market data and news analysis with fallbacks
@@ -522,16 +572,33 @@ function getCoinName(symbol: string): string {
  * Get multiple coins analysis (for portfolio view)
  */
 export async function getMultiCoinAnalysis(
-  coins: string[]
+  coins: Array<{
+    symbol: string;
+    name: string;
+    price: string;
+    priceChangePercent24h: string;
+    volume24h: string;
+    marketCap: string;
+  }>
 ): Promise<MarketAnalysis[]> {
   try {
+    if (!Array.isArray(coins) || coins.length === 0) {
+      throw new MarketAnalysisError(
+        "Invalid input: coins array must not be empty",
+        "INVALID_INPUT",
+        400
+      );
+    }
+
     // Process coins in parallel with limited concurrency
     const maxConcurrency = 3;
     const results: MarketAnalysis[] = [];
 
     for (let i = 0; i < coins.length; i += maxConcurrency) {
       const batch = coins.slice(i, i + maxConcurrency);
-      const batchPromises = batch.map((coin) => generateMarketAnalysis(coin));
+      const batchPromises = batch.map((coinInfo) =>
+        generateMarketAnalysis(coinInfo)
+      );
 
       const batchResults = await Promise.allSettled(batchPromises);
 

@@ -1,15 +1,16 @@
 import fetch from "node-fetch";
 import config from "../config/env";
+import { pipeline } from "@xenova/transformers";
 
-type SentimentLabel = "positive" | "negative" | "neutral";
+export type SentimentLabel = "positive" | "negative" | "neutral";
 
-interface SentimentResult {
+export interface SentimentResult {
   sentiment: SentimentLabel;
   confidence: number;
   scores: Array<{ label: string; score: number }>;
 }
 
-interface KeywordSentimentResult {
+export interface KeywordSentimentResult {
   sentiment: SentimentLabel;
   confidence: number;
   method: "keyword";
@@ -21,7 +22,7 @@ interface HuggingFaceResponse {
   [key: string]: any;
 }
 
-class SentimentAnalysisError extends Error {
+export class SentimentAnalysisError extends Error {
   constructor(message: string, public code: string, public details?: any) {
     super(message);
     this.name = "SentimentAnalysisError";
@@ -79,233 +80,67 @@ const NEGATIVE_KEYWORDS = [
   "bubble",
 ];
 
-class HuggingFaceService {
-  private apiKey: string;
-  private baseUrl = "https://api-inference.huggingface.co";
-  private maxRetries = 2;
-  private modelEndpoint = "ProsusAI/finbert";
+class SentimentAnalyzer {
+  private static instance: SentimentAnalyzer;
+  private model: any = null;
+  private isInitializing = false;
+  private initPromise: Promise<void> | null = null;
 
-  constructor() {
-    this.apiKey = config.HUGGINGFACE_API_KEY;
-    if (!this.apiKey) {
-      throw new Error("HUGGINGFACE_API_KEY environment variable is required");
+  private constructor() {} // Private constructor for singleton
+
+  static getInstance(): SentimentAnalyzer {
+    if (!SentimentAnalyzer.instance) {
+      SentimentAnalyzer.instance = new SentimentAnalyzer();
     }
+    return SentimentAnalyzer.instance;
   }
 
-  private getHeaders() {
-    return {
-      Authorization: `Bearer ${this.apiKey}`,
-      "Content-Type": "application/json",
-      "User-Agent": "TradeableAI/1.0",
-    };
+  async initialize() {
+    if (this.model) return;
+    if (this.isInitializing) {
+      return this.initPromise;
+    }
+
+    this.isInitializing = true;
+    this.initPromise = (async () => {
+      try {
+        console.log("Loading FinBERT model locally...");
+        this.model = await pipeline("sentiment-analysis", "ProsusAI/finbert");
+        console.log("FinBERT model loaded successfully");
+      } catch (error) {
+        console.error("Failed to load FinBERT model:", error);
+        throw error;
+      } finally {
+        this.isInitializing = false;
+      }
+    })();
+
+    return this.initPromise;
   }
 
   async analyzeSentiment(text: string): Promise<SentimentResult> {
-    for (let attempt = 0; attempt <= this.maxRetries; attempt++) {
-      try {
-        if (!text?.trim()) {
-          throw new SentimentAnalysisError(
-            "Empty text provided",
-            "VALIDATION_ERROR"
-          );
-        }
+    await this.initialize();
 
-        const response = await fetch(
-          `${this.baseUrl}/models/${this.modelEndpoint}`,
-          {
-            method: "POST",
-            headers: this.getHeaders(),
-            body: JSON.stringify({
-              inputs: text,
-              options: { wait_for_model: true },
-            }),
-            signal: AbortSignal.timeout(10000),
-          }
-        );
+    try {
+      const result = await this.model(text);
+      const prediction = result[0];
 
-        if (response.status === 401) {
-          throw new SentimentAnalysisError(
-            "HuggingFace API authentication failed",
-            "AUTH_ERROR"
-          );
-        }
-
-        if (response.status === 503) {
-          console.log("Model loading, waiting before retry...");
-          await new Promise((resolve) => setTimeout(resolve, 2000));
-          continue;
-        }
-
-        if (!response.ok) {
-          throw new SentimentAnalysisError(
-            `HuggingFace API error: ${response.status}`,
-            "API_ERROR",
-            await response.text()
-          );
-        }
-
-        const data = await response.json();
-        return this.processSentimentResult(data);
-      } catch (error) {
-        if (error instanceof SentimentAnalysisError) {
-          throw error;
-        }
-
-        console.warn(`Attempt ${attempt + 1} failed:`, error);
-
-        if (attempt === this.maxRetries) {
-          console.log("Using fallback sentiment analysis");
-          return analyzeKeywordSentiment(text);
-        }
-
-        await new Promise((resolve) =>
-          setTimeout(resolve, 1000 * (attempt + 1))
-        );
-      }
-    }
-
-    return analyzeKeywordSentiment(text);
-  }
-
-  private processSentimentResult(data: any): SentimentResult {
-    if (!Array.isArray(data) || !data[0]) {
-      throw new SentimentAnalysisError(
-        "Invalid API response format",
-        "INVALID_RESPONSE"
-      );
-    }
-
-    const predictions = data[0];
-    const labels = ["positive", "negative", "neutral"];
-    const scores = labels.map((label) => ({
-      label,
-      score: predictions[label] || 0,
-    }));
-
-    const highestPrediction = scores.reduce((prev, current) =>
-      current.score > prev.score ? current : prev
-    );
-
-    return {
-      sentiment: highestPrediction.label as SentimentLabel,
-      confidence: highestPrediction.score,
-      scores,
-    };
-  }
-}
-
-// Create service instance
-const huggingFaceService = new HuggingFaceService();
-
-/**
- * Analyze sentiment using FinBERT model with proper error handling
- */
-async function analyzeSentimentWithHuggingFace(
-  text: string
-): Promise<SentimentResult> {
-  const HUGGINGFACE_API_KEY = config.HUGGINGFACE_API_KEY;
-  const HUGGINGFACE_API_URL =
-    "https://api-inference.huggingface.co/models/ProsusAI/finbert";
-
-  if (
-    !HUGGINGFACE_API_KEY ||
-    HUGGINGFACE_API_KEY.startsWith("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")
-  ) {
-    console.warn("Invalid HuggingFace API key, using fallback analysis");
-    return analyzeKeywordSentiment(text);
-  }
-
-  // Test the API key first
-  try {
-    const testResponse = await fetch(
-      "https://api-inference.huggingface.co/models/ProsusAI/finbert",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${HUGGINGFACE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          inputs: "test",
-        }),
-      }
-    );
-
-    if (testResponse.status === 401) {
-      console.error("HuggingFace API key is invalid");
+      return {
+        sentiment: prediction.label.toLowerCase() as SentimentLabel,
+        confidence: prediction.score,
+        scores: [
+          { label: prediction.label.toLowerCase(), score: prediction.score },
+          // Add other labels with 0 score
+          ...["positive", "negative", "neutral"]
+            .filter((label) => label !== prediction.label.toLowerCase())
+            .map((label) => ({ label, score: 0 })),
+        ],
+      };
+    } catch (error) {
+      console.error("Local sentiment analysis failed:", error);
+      // Fallback to keyword analysis if local model fails
       return analyzeKeywordSentiment(text);
     }
-  } catch (error) {
-    console.warn("HuggingFace API test failed, using fallback");
-    return analyzeKeywordSentiment(text);
-  }
-
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 30000);
-
-  try {
-    const response = await fetch(HUGGINGFACE_API_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${HUGGINGFACE_API_KEY}`,
-        "Content-Type": "application/json",
-        "User-Agent": "TradeableAI/1.0",
-      },
-      body: JSON.stringify({
-        inputs: text,
-        options: {
-          wait_for_model: true,
-          use_cache: true,
-        },
-      }),
-      signal: controller.signal,
-    });
-
-    if (!response.ok) {
-      const errorBody = await response.text();
-      throw new SentimentAnalysisError(
-        `HuggingFace API error: ${response.status} - ${response.statusText}`,
-        "API_ERROR",
-        {
-          status: response.status,
-          body: errorBody,
-        }
-      );
-    }
-
-    const data = await response.json();
-
-    if (!data || !Array.isArray(data)) {
-      throw new SentimentAnalysisError(
-        "Invalid response format from HuggingFace API",
-        "INVALID_RESPONSE"
-      );
-    }
-
-    // FinBERT specific response handling
-    const predictions = data[0] || [];
-    const labels = ["positive", "negative", "neutral"];
-    const scores = labels.map((label) => ({
-      label,
-      score: predictions[label] || 0,
-    }));
-
-    // Find the prediction with the highest score
-    const highestPrediction = scores.reduce(
-      (prev, current) => (current.score > prev.score ? current : prev),
-      { label: "neutral", score: 0 }
-    );
-
-    return {
-      sentiment: highestPrediction.label as SentimentLabel,
-      confidence: highestPrediction.score,
-      scores: scores,
-    };
-  } catch (error) {
-    console.error("HuggingFace analysis failed:", error);
-    return analyzeKeywordSentiment(text);
-  } finally {
-    clearTimeout(timeout);
   }
 }
 
@@ -403,9 +238,10 @@ export async function analyzeSentiment(
   text: string
 ): Promise<SentimentResult | KeywordSentimentResult> {
   try {
-    return await huggingFaceService.analyzeSentiment(text);
+    const analyzer = SentimentAnalyzer.getInstance();
+    return await analyzer.analyzeSentiment(text);
   } catch (error) {
-    console.warn("Sentiment analysis failed:", error);
+    console.warn("Local sentiment analysis failed:", error);
     return analyzeKeywordSentiment(text);
   }
 }
@@ -585,10 +421,6 @@ export function calculateOverallSentiment(
   };
 }
 
-export {
-  analyzeSentimentWithHuggingFace,
-  analyzeKeywordSentiment,
-  SentimentResult,
-  KeywordSentimentResult,
-  SentimentAnalysisError,
-};
+// Example usage
+const result = await analyzeSentiment("Bitcoin price surges to new highs");
+console.log(result); // Local model prediction or keyword fallback

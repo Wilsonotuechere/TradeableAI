@@ -33,10 +33,14 @@ if (process.env.HUGGINGFACE_API_KEY) {
 console.log("=== END DEBUG ===");
 
 // Now that environment is loaded, import the rest
-import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
+import express from "express";
+import cors from "cors";
+import { config } from "../shared/config";
+import { setupSentimentRoutes } from "./routes/sentiment";
 import { setupVite, serveStatic, log } from "./vite";
 import { validateEnvironment, EnvironmentError } from "./config/env-validator";
+import { Express, Request, Response, NextFunction } from "express";
+import http from "http";
 
 try {
   // Validate required environment variables
@@ -59,6 +63,34 @@ try {
 }
 
 const app = express();
+
+// Middleware
+app.use(express.json());
+app.use(
+  cors({
+    origin: config.backend.cors.origin,
+    credentials: true,
+  })
+);
+
+// Routes
+setupSentimentRoutes(app);
+
+// Error handling
+app.use(
+  (
+    err: any,
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    console.error(err.stack);
+    res.status(500).json({
+      success: false,
+      error: err.message || "Internal Server Error",
+    });
+  }
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -95,12 +127,11 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
 
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
+  app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+    const status = (err as any).status || (err as any).statusCode || 500;
     const message = err.message || "Internal Server Error";
 
     res.status(status).json({ message });
-    throw err;
   });
 
   // importantly only setup vite in development and after
@@ -126,3 +157,16 @@ app.use((req, res, next) => {
     );
   });
 })();
+
+function registerRoutes(app: Express): Promise<http.Server> {
+  return new Promise((resolve) => {
+    const server = http.createServer(app);
+
+    // Add any additional route setup here if needed
+    app.get("/health", (req, res) => {
+      res.json({ status: "ok" });
+    });
+
+    resolve(server);
+  });
+}

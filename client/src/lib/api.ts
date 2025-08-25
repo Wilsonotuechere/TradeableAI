@@ -32,6 +32,13 @@ export const newsApi = {
   },
 };
 
+export const sentimentApi = {
+  analyzeSentiment: async (text: string) => {
+    const response = await apiRequest("POST", "/api/sentiment", { text });
+    return response.json();
+  },
+};
+
 export const chatApi = {
   sendMessage: async (message: string, conversationId?: string) => {
     const response = await apiRequest("POST", "/api/chat", {
